@@ -16,7 +16,7 @@ The project has only been tested with the `Launchpad Mini MK2` but should work w
 
 This project is absolutely not affiliated with [Novation](https://novationmusic.com/) or [Focusrite](https://focusrite.com/).
 
-It has been developed according to the programmer's reference made available by Novation. You can find a copy of the `programmer's manual` in the `doc` directory.
+It has been developed according to the programmer reference made available by Novation. You can find a copy of this reference in the `doc` directory.
 
 ## License
 
@@ -105,7 +105,7 @@ make -j${NUMBER_OF_PROCESSES}
 
 Ajust the `NUMBER_OF_PROCESSES` with this rule of thumb: `NUMBER_OF_PROCESSES = NUMBER_OF_CPU + 1`.
 
-Example for a 4 core CPU:
+Example for a 4 cores CPU:
 
 ```
 make -j5
@@ -113,7 +113,7 @@ make -j5
 
 ### Install the project
 
-This step is optional and can require `root` permission.
+This step is optional and can require `root` permissions.
 
 ```
 make install
@@ -156,3 +156,71 @@ MIDI output:
   - Launchpad Mini
 
 ```
+
+### List available MIDI peripherals
+
+You can list all MIDI peripherals with the `-l` or the `--list` options:
+
+```
+launchpad -l
+```
+
+or
+
+```
+launchpad --list
+```
+
+Outputs example:
+
+```
+Available MIDI inputs :
+
+[I] Midi Through:Midi Through Port-0 14:0
+[I] Launchpad Mini:Launchpad Mini MIDI 1 20:0
+
+Available MIDI outputs :
+
+[O] Midi Through:Midi Through Port-0 14:0
+[O] Launchpad Mini:Launchpad Mini MIDI 1 20:0
+
+```
+
+### Select a specific MIDI peripheral
+
+By default, the utility will use the string `Launchpad Mini` to find a usable Launchpad.
+
+But you can select a specific MIDI peripheral by using `--midi`, `--midi-input`, `--midi-output` options.
+
+The utility will use each provided string like a prefix to compare with all available inputs/outputs and will choose the first match.
+
+Example:
+
+```
+launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
+```
+
+### Cycle application
+
+You can cycle all colors with this command:
+
+```
+launchpad --cycle [--delay={delay-in-ms}]
+```
+
+### Print application
+
+You can print a text with this command:
+
+```
+launchpad --print [--delay={delay-in-ms}]
+```
+
+### Scroll application
+
+You can scroll a text with this command:
+
+```
+launchpad --scroll [--delay={delay-in-ms}]
+```
+
