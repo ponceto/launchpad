@@ -76,6 +76,30 @@ struct arg
         }
         return "";
     }
+
+    static uint32_t delay(const std::string& argument)
+    {
+        const char* string = argument.c_str();
+        const char* endptr = nullptr;
+        const long  value  = ::strtol(string, const_cast<char**>(&endptr), 10);
+
+        if((endptr != nullptr) && (*endptr != '\0')) {
+            if(::strcmp(endptr, "ms") == 0) {
+                return value;
+            }
+            if(::strcmp(endptr, "s") == 0) {
+                return value * 1000;
+            }
+            if(::strcmp(endptr, "m") == 0) {
+                return value * 1000 * 60;
+            }
+            throw std::runtime_error("invalid delay");
+        }
+        if(value <= 0) {
+            throw std::runtime_error("invalid delay");
+        }
+        return value;
+    }
 };
 
 }
@@ -187,7 +211,7 @@ int Application::help()
         _console.printStream << "    --print={text}              print a text"              << std::endl;
         _console.printStream << "    --scroll={text}             scroll a text"             << std::endl;
         _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    --delay={delay-in-ms}       delay in ms"               << std::endl;
+        _console.printStream << "    --delay={value[ms|s|m]}     delay (ms by default)"     << std::endl;
         _console.printStream << ""                                                          << std::endl;
         _console.printStream << "    --midi={port}               MIDI input/output"         << std::endl;
         _console.printStream << "    --midi-input={port}         MIDI input"                << std::endl;
@@ -219,19 +243,19 @@ int Application::loop()
         case LaunchpadAppType::kCYCLE:
             {
                 _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadCycleApp(_arglist, _console, *_lpDevice, ::atoi(_lpDelay.c_str())));
+                _lpApplication.reset(new LaunchpadCycleApp(_arglist, _console, *_lpDevice, arg::delay(_lpDelay)));
             }
             break;
         case LaunchpadAppType::kPRINT:
             {
                 _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadPrintApp(_arglist, _console, *_lpDevice, _lpString, ::atoi(_lpDelay.c_str())));
+                _lpApplication.reset(new LaunchpadPrintApp(_arglist, _console, *_lpDevice, _lpString, arg::delay(_lpDelay)));
             }
             break;
         case LaunchpadAppType::kSCROLL:
             {
                 _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadScrollApp(_arglist, _console, *_lpDevice, _lpString, ::atoi(_lpDelay.c_str())));
+                _lpApplication.reset(new LaunchpadScrollApp(_arglist, _console, *_lpDevice, _lpString, arg::delay(_lpDelay)));
             }
             break;
         default:

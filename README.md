@@ -141,7 +141,7 @@ Usage: launchpad [OPTIONS]
     --print={text}              print a text
     --scroll={text}             scroll a text
 
-    --delay={delay-in-ms}       delay in ms
+    --delay={value[ms|s|m]}     delay (ms by default)
 
     --midi={port}               MIDI input/output
     --midi-input={port}         MIDI input
@@ -205,7 +205,7 @@ launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
 You can cycle all colors with this command:
 
 ```
-launchpad --cycle [--delay={delay-in-ms}]
+launchpad --cycle [--delay={value[ms|s|m]}]
 ```
 
 ### Print application
@@ -213,7 +213,7 @@ launchpad --cycle [--delay={delay-in-ms}]
 You can print a text with this command:
 
 ```
-launchpad --print [--delay={delay-in-ms}]
+launchpad --print [--delay={value[ms|s|m]}]
 ```
 
 ### Scroll application
@@ -221,6 +221,6 @@ launchpad --print [--delay={delay-in-ms}]
 You can scroll a text with this command:
 
 ```
-launchpad --scroll [--delay={delay-in-ms}]
+launchpad --scroll [--delay={value[ms|s|m]}]
 ```
 
