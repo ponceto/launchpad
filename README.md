@@ -213,7 +213,7 @@ launchpad --cycle [--delay={value[ms|s|m]}]
 You can print a text with this command:
 
 ```
-launchpad --print [--delay={value[ms|s|m]}]
+launchpad --print={text} [--delay={value[ms|s|m]}]
 ```
 
 ### Scroll application
@@ -221,6 +221,6 @@ launchpad --print [--delay={value[ms|s|m]}]
 You can scroll a text with this command:
 
 ```
-launchpad --scroll [--delay={value[ms|s|m]}]
+launchpad --scroll={text} [--delay={value[ms|s|m]}]
 ```
 
