@@ -41,6 +41,9 @@ protected: // protected interface
     virtual int help();
 
     virtual void run();
+    virtual void shutdown();
+    virtual bool running();
+    virtual bool terminated();
 
     virtual void onTimeout();
     virtual void onSigALRM();
@@ -63,7 +66,7 @@ protected: // protected data
     LaunchpadAppType      _lpAppType;
     LaunchpadUniquePtr    _lpLaunchpad;
     LaunchpadAppUniquePtr _lpLaunchpadApp;
-    bool                  _lpShouldExit;
+    bool                  _lpShutdown;
 
 private: // disable copy and assignment
     Application(const Application&) = delete;

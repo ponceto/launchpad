@@ -260,7 +260,7 @@ Application::Application ( const ArgList& arglist
      , _lpAppType(LaunchpadAppType::kNONE)
      , _lpLaunchpad()
      , _lpLaunchpadApp()
-     , _lpShouldExit()
+     , _lpShutdown()
 {
 }
 
@@ -390,7 +390,7 @@ int Application::loop()
         std::thread(&Application::run, this).swap(thread);
     }
     /* main loop */ {
-        while(_lpShouldExit == false) {
+        while(running()) {
             const int signum = sig::wait();
             if(signum == -1) {
                 onTimeout();
@@ -423,11 +423,6 @@ int Application::loop()
                 default:
                     break;
             }
-        }
-    }
-    /* terminate app */ {
-        if(_lpLaunchpadApp->running()) {
-            _lpLaunchpadApp->shutdown();
         }
     }
     /* join thread */ {
@@ -482,40 +477,48 @@ void Application::run()
     static_cast<void>(::kill(::getpid(), SIGTERM));
 }
 
-void Application::onTimeout()
+void Application::shutdown()
+{
+    if(_lpLaunchpadApp->running()) {
+        _lpLaunchpadApp->shutdown();
+    }
+    _lpShutdown = true;
+}
+
+bool Application::running()
 {
     if(_lpLaunchpadApp) {
         if(_lpLaunchpadApp->terminated()) {
-            _lpShouldExit = true;
+            _lpShutdown = true;
         }
     }
+    return _lpShutdown == false;
+}
+
+bool Application::terminated()
+{
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->terminated()) {
+            _lpShutdown = true;
+        }
+    }
+    return _lpShutdown != false;
+}
+
+void Application::onTimeout()
+{
 }
 
 void Application::onSigALRM()
 {
-    if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->terminated()) {
-            _lpShouldExit = true;
-        }
-    }
 }
 
 void Application::onSigUSR1()
 {
-    if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->terminated()) {
-            _lpShouldExit = true;
-        }
-    }
 }
 
 void Application::onSigUSR2()
 {
-    if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->terminated()) {
-            _lpShouldExit = true;
-        }
-    }
 }
 
 void Application::onSigPIPE()
@@ -528,16 +531,17 @@ void Application::onSigCHLD()
 
 void Application::onSigTERM()
 {
-    _lpShouldExit = true;
+    shutdown();
 }
 
 void Application::onSigINTR()
 {
-    _lpShouldExit = true;
+    shutdown();
 }
 
 void Application::onSigHGUP()
 {
+    shutdown();
 }
 
 // ---------------------------------------------------------------------------
