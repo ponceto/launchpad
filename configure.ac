@@ -68,6 +68,7 @@ AX_CHECK_BYTE_ORDER
 
 AX_CHECK_HEADERS
 AX_CHECK_RTMIDI
+AX_PTHREAD
 
 # ----------------------------------------------------------------------------
 # Defines

@@ -82,47 +82,50 @@ struct lp
         launchpad.setBuffer(0, 0, false, false);
     }
 
-    static void cycle(Launchpad& launchpad, const uint32_t delay)
+    static void cycle(Launchpad& launchpad, const uint32_t delay, bool& terminate)
     {
         for(int r = 0; r < 256; r += 64) {
             for(int g = 0; g < 256; g += 64) {
                 lp::clear(launchpad, lp::color(r, g));
                 lp::sleep(launchpad, delay);
+                if(terminate != false) {
+                    break;
+                }
+            }
+            if(terminate != false) {
+                break;
             }
         }
     }
 
-    static void print(Launchpad& launchpad, const uint8_t character, const uint8_t foreground, const uint8_t background, const uint32_t delay)
-    {
-        const uint8_t index = (character < Font8x8::MAX_CHARS ? character : 0);
-
-        launchpad.setBuffer(0, 1, false, false);
-        for(uint8_t row = 0; row < ROWS; ++row) {
-            const uint8_t val = Font8x8::data[index][row];
-            uint8_t       bit = 0x01;
-            for(uint8_t col = 0; col < COLS; ++col) {
-                if((val & bit) != 0) {
-                    launchpad.setPad(((row * STRIDE) + col), foreground);
-                }
-                else {
-                    launchpad.setPad(((row * STRIDE) + col), background);
-                }
-                bit <<= 1;
-            }
-        }
-        launchpad.setBuffer(1, 0, false, true );
-        launchpad.setBuffer(0, 0, false, false);
-        lp::sleep(launchpad, delay);
-    }
-
-    static void print(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay)
+    static void print(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay, bool& terminate)
     {
         for(auto character : string) {
-            print(launchpad, character, foreground, background, delay);
+            launchpad.setBuffer(0, 1, false, false);
+            const uint8_t index = (character < Font8x8::MAX_CHARS ? character : 0);
+            for(uint8_t row = 0; row < ROWS; ++row) {
+                const uint8_t val = Font8x8::data[index][row];
+                uint8_t       bit = 0x01;
+                for(uint8_t col = 0; col < COLS; ++col) {
+                    if((val & bit) != 0) {
+                        launchpad.setPad(((row * STRIDE) + col), foreground);
+                    }
+                    else {
+                        launchpad.setPad(((row * STRIDE) + col), background);
+                    }
+                    bit <<= 1;
+                }
+            }
+            launchpad.setBuffer(1, 0, false, true );
+            launchpad.setBuffer(0, 0, false, false);
+            lp::sleep(launchpad, delay);
+            if(terminate != false) {
+                break;
+            }
         }
     }
 
-    static void scroll(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay)
+    static void scroll(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay, bool& terminate)
     {
         const char*  data = string.c_str();
         const size_t size = string.size();
@@ -146,6 +149,9 @@ struct lp
             launchpad.setBuffer(1, 0, false, true );
             launchpad.setBuffer(0, 0, false, false);
             lp::sleep(launchpad, delay);
+            if(terminate != false) {
+                break;
+            }
         }
     }
 
@@ -192,6 +198,7 @@ LaunchpadApp::LaunchpadApp ( const ArgList& arglist
     , _green(lp::color(0, 255))
     , _yellow(lp::color(255, 255))
     , _delay(delay)
+    , _terminate(false)
 {
 }
 
@@ -214,7 +221,7 @@ LaunchpadListApp::~LaunchpadListApp()
 {
 }
 
-int LaunchpadListApp::main()
+void LaunchpadListApp::main()
 {
     /* list inputs */ {
         lp::list_inputs(_launchpad, _console.printStream);
@@ -222,7 +229,6 @@ int LaunchpadListApp::main()
     /* list outputs */ {
         lp::list_outputs(_launchpad, _console.printStream);
     }
-    return EXIT_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------
@@ -241,14 +247,13 @@ LaunchpadCycleApp::~LaunchpadCycleApp()
 {
 }
 
-int LaunchpadCycleApp::main()
+void LaunchpadCycleApp::main()
 {
     /* cycle */ {
         lp::reset(_launchpad);
-        lp::cycle(_launchpad, _delay);
+        lp::cycle(_launchpad, _delay, _terminate);
         lp::clear(_launchpad, _black);
     }
-    return EXIT_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------
@@ -269,14 +274,13 @@ LaunchpadPrintApp::~LaunchpadPrintApp()
 {
 }
 
-int LaunchpadPrintApp::main()
+void LaunchpadPrintApp::main()
 {
     /* print */ {
         lp::reset(_launchpad);
-        lp::print(_launchpad, _string, _red, _black, _delay);
+        lp::print(_launchpad, _string, _red, _black, _delay, _terminate);
         lp::clear(_launchpad, _black);
     }
-    return EXIT_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------
@@ -297,14 +301,13 @@ LaunchpadScrollApp::~LaunchpadScrollApp()
 {
 }
 
-int LaunchpadScrollApp::main()
+void LaunchpadScrollApp::main()
 {
     /* scroll */ {
         lp::reset(_launchpad);
-        lp::scroll(_launchpad, _string, _red, _black, _delay);
+        lp::scroll(_launchpad, _string, _red, _black, _delay, _terminate);
         lp::clear(_launchpad, _black);
     }
-    return EXIT_SUCCESS;
 }
 
 // ---------------------------------------------------------------------------

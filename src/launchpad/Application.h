@@ -36,8 +36,21 @@ public: // public interface
     virtual int main();
 
 protected: // protected interface
-    virtual int help();
+    virtual int init();
     virtual int loop();
+    virtual int help();
+
+    virtual void run();
+
+    virtual void onTimeout();
+    virtual void onSigALRM();
+    virtual void onSigUSR1();
+    virtual void onSigUSR2();
+    virtual void onSigPIPE();
+    virtual void onSigCHLD();
+    virtual void onSigTERM();
+    virtual void onSigINTR();
+    virtual void onSigHGUP();
 
 protected: // protected data
     const ArgList&        _arglist;
@@ -48,8 +61,9 @@ protected: // protected data
     std::string           _lpString;
     std::string           _lpDelay;
     LaunchpadAppType      _lpAppType;
-    LaunchpadUniquePtr    _lpDevice;
-    LaunchpadAppUniquePtr _lpApplication;
+    LaunchpadUniquePtr    _lpLaunchpad;
+    LaunchpadAppUniquePtr _lpLaunchpadApp;
+    bool                  _lpShouldExit;
 
 private: // disable copy and assignment
     Application(const Application&) = delete;

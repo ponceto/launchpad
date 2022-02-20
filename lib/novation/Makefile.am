@@ -21,7 +21,7 @@
 
 LAUNCHPAD_xCPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/src
 LAUNCHPAD_xLDFLAGS = -L$(top_builddir)/lib -L$(top_builddir)/src
-LAUNCHPAD_xLIBADD =
+LAUNCHPAD_xLIBADD = -lpthread
 
 RTMIDI_xCPPFLAGS = $(rtmidi_CFLAGS)
 RTMIDI_xLDFLAGS = $(rtmidi_LDFLAGS)

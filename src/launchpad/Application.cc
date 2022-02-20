@@ -17,15 +17,19 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
+#include <csignal>
 #include <memory>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
+#include <thread>
+#include <unistd.h>
 #include "Application.h"
 
 // ---------------------------------------------------------------------------
@@ -42,7 +46,7 @@ struct arg
         const char* sep = ::strrchr(str, '/');
 
         if(sep != nullptr) {
-            str = sep + 1;
+            return sep + 1;
         }
         return str;
     }
@@ -72,7 +76,7 @@ struct arg
         const char* equ = ::strchr(str, '=');
 
         if(equ != nullptr) {
-            return ++equ;
+            return equ + 1;
         }
         return "";
     }
@@ -105,6 +109,142 @@ struct arg
 }
 
 // ---------------------------------------------------------------------------
+// <anonymous>::sig
+// ---------------------------------------------------------------------------
+
+namespace {
+
+struct sig
+{
+    using native_sigset    = sigset_t;
+    using native_sigaction = struct sigaction;
+    using native_timespec  = struct timespec;
+
+    static void default_handler(int signum)
+    {
+        static_cast<void>(signum);
+    }
+
+    static void emptyset(native_sigset& set)
+    {
+        const int rc = ::sigemptyset(&set);
+        if(rc != 0) {
+            throw std::runtime_error("sigemptyset has failed");
+        }
+    }
+
+    static void fillset(native_sigset& set)
+    {
+        const int rc = ::sigfillset(&set);
+        if(rc != 0) {
+            throw std::runtime_error("sigfillset has failed");
+        }
+    }
+
+    static void addset(native_sigset& set, const int signum)
+    {
+        const int rc = ::sigaddset(&set, signum);
+        if(rc != 0) {
+            throw std::runtime_error("sigaddset has failed");
+        }
+    }
+
+    static void delset(native_sigset& set, const int signum)
+    {
+        const int rc = ::sigdelset(&set, signum);
+        if(rc != 0) {
+            throw std::runtime_error("sigdelset has failed");
+        }
+    }
+
+    static void procmask(const int how, const native_sigset& set)
+    {
+       const int rc = ::pthread_sigmask(how, &set, nullptr);
+        if(rc != 0) {
+            throw std::runtime_error("sigprocmask has failed");
+        }
+    }
+
+    static int timedwait(const native_sigset& set, const native_timespec& timeout)
+    {
+        const int rc = ::sigtimedwait(&set, nullptr, &timeout);
+        if((rc == -1) && (errno != EAGAIN)) {
+            throw std::runtime_error("sigtimedwait has failed");
+        }
+        return rc;
+    }
+
+    static void action(const int signum, const native_sigaction& act)
+    {
+        const int rc = ::sigaction(signum, &act, nullptr);
+        if(rc != 0) {
+            throw std::runtime_error("sigaction has failed");
+        }
+    }
+
+    static void init()
+    {
+        native_sigset    signal_set;
+        native_sigaction signal_action;
+
+        /* initialize signal_set */ {
+            sig::emptyset(signal_set);
+            sig::addset(signal_set, SIGALRM);
+            sig::addset(signal_set, SIGUSR1);
+            sig::addset(signal_set, SIGUSR2);
+            sig::addset(signal_set, SIGPIPE);
+            sig::addset(signal_set, SIGCHLD);
+            sig::addset(signal_set, SIGTERM);
+            sig::addset(signal_set, SIGINT );
+            sig::addset(signal_set, SIGHUP );
+        }
+        /* initialize signal_action */ {
+            signal_action.sa_handler = &sig::default_handler;
+            signal_action.sa_flags   = 0;
+            signal_action.sa_mask    = signal_set;
+        }
+        /* install signal handlers */ {
+            sig::action(SIGALRM, signal_action);
+            sig::action(SIGUSR1, signal_action);
+            sig::action(SIGUSR2, signal_action);
+            sig::action(SIGPIPE, signal_action);
+            sig::action(SIGCHLD, signal_action);
+            sig::action(SIGTERM, signal_action);
+            sig::action(SIGINT , signal_action);
+            sig::action(SIGHUP , signal_action);
+        }
+        /* mask signals */ {
+            sig::procmask(SIG_BLOCK, signal_set);
+        }
+    }
+
+    static int wait()
+    {
+        native_sigset   signal_set;
+        native_timespec timeout;
+
+        /* initialize signal_set */ {
+            sig::emptyset(signal_set);
+            sig::addset(signal_set, SIGALRM);
+            sig::addset(signal_set, SIGUSR1);
+            sig::addset(signal_set, SIGUSR2);
+            sig::addset(signal_set, SIGPIPE);
+            sig::addset(signal_set, SIGCHLD);
+            sig::addset(signal_set, SIGTERM);
+            sig::addset(signal_set, SIGINT );
+            sig::addset(signal_set, SIGHUP );
+        }
+        /* initialize timespec */ {
+            timeout.tv_sec  = 1L;
+            timeout.tv_nsec = 0L;
+        }
+        return sig::timedwait(signal_set, timeout);
+    }
+};
+
+}
+
+// ---------------------------------------------------------------------------
 // Application
 // ---------------------------------------------------------------------------
 
@@ -118,8 +258,9 @@ Application::Application ( const ArgList& arglist
      , _lpString(" Hello World ")
      , _lpDelay()
      , _lpAppType(LaunchpadAppType::kNONE)
-     , _lpDevice()
-     , _lpApplication()
+     , _lpLaunchpad()
+     , _lpLaunchpadApp()
+     , _lpShouldExit()
 {
 }
 
@@ -149,9 +290,12 @@ int Application::main()
             else if(arg::is(argument, "--cycle")) {
                 if(_lpAppType == LaunchpadAppType::kNONE) {
                     _lpAppType = LaunchpadAppType::kCYCLE;
-                }
-                if(_lpDelay.empty()) {
-                    _lpDelay = "250";
+                    if(argval.size() != 0) {
+                        _lpString = argval;
+                    }
+                    if(_lpDelay.empty()) {
+                        _lpDelay = "500ms";
+                    }
                 }
             }
             else if(arg::is(argument, "--print")) {
@@ -161,7 +305,7 @@ int Application::main()
                         _lpString = argval;
                     }
                     if(_lpDelay.empty()) {
-                        _lpDelay = "300";
+                        _lpDelay = "250ms";
                     }
                 }
             }
@@ -172,7 +316,7 @@ int Application::main()
                         _lpString = argval;
                     }
                     if(_lpDelay.empty()) {
-                        _lpDelay = "75";
+                        _lpDelay = "100ms";
                     }
                 }
             }
@@ -194,14 +338,109 @@ int Application::main()
             }
         }
     }
-    return loop();
+    return init();
+}
+
+int Application::init()
+{
+    switch(_lpAppType) {
+        case LaunchpadAppType::kHELP:
+            break;
+        case LaunchpadAppType::kLIST:
+            {
+                _lpLaunchpad.reset(new Launchpad(_lpName));
+                _lpLaunchpadApp.reset(new LaunchpadListApp(_arglist, _console, *_lpLaunchpad));
+            }
+            break;
+        case LaunchpadAppType::kCYCLE:
+            {
+                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
+                _lpLaunchpadApp.reset(new LaunchpadCycleApp(_arglist, _console, *_lpLaunchpad, arg::delay(_lpDelay)));
+            }
+            break;
+        case LaunchpadAppType::kPRINT:
+            {
+                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
+                _lpLaunchpadApp.reset(new LaunchpadPrintApp(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay)));
+            }
+            break;
+        case LaunchpadAppType::kSCROLL:
+            {
+                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
+                _lpLaunchpadApp.reset(new LaunchpadScrollApp(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay)));
+            }
+            break;
+        default:
+            break;
+    }
+    if(_lpLaunchpadApp) {
+        return loop();
+    }
+    return help();
+}
+
+int Application::loop()
+{
+    std::thread thread;
+
+    /* initialize signals */ {
+        sig::init();
+    }
+    /* start thread */ {
+        std::thread(&Application::run, this).swap(thread);
+    }
+    /* main loop */ {
+        while(_lpShouldExit == false) {
+            const int signum = sig::wait();
+            if(signum == -1) {
+                onTimeout();
+            }
+            else switch(signum) {
+                case SIGALRM:
+                    onSigALRM();
+                    break;
+                case SIGUSR1:
+                    onSigUSR1();
+                    break;
+                case SIGUSR2:
+                    onSigUSR2();
+                    break;
+                case SIGPIPE:
+                    onSigPIPE();
+                    break;
+                case SIGCHLD:
+                    onSigCHLD();
+                    break;
+                case SIGTERM:
+                    onSigTERM();
+                    break;
+                case SIGINT:
+                    onSigINTR();
+                    break;
+                case SIGHUP:
+                    onSigHGUP();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    /* terminate app */ {
+        if(_lpLaunchpadApp->running()) {
+            _lpLaunchpadApp->shutdown();
+        }
+    }
+    /* join thread */ {
+        thread.join();
+    }
+    return EXIT_SUCCESS;
 }
 
 int Application::help()
 {
     const std::string program(arg::basename(_arglist.at(0)));
 
-    /* print usage */ {
+    if(_console.printStream.good()) {
         _console.printStream << "Usage: " << program << ' ' << "[OPTIONS]"                  << std::endl;
         _console.printStream << ""                                                          << std::endl;
         _console.printStream << "    -h, --help                  display this help"         << std::endl;
@@ -229,42 +468,76 @@ int Application::help()
     return EXIT_SUCCESS;
 }
 
-int Application::loop()
+void Application::run()
 {
-    switch(_lpAppType) {
-        case LaunchpadAppType::kHELP:
-            break;
-        case LaunchpadAppType::kLIST:
-            {
-                _lpDevice.reset(new Launchpad(_lpName));
-                _lpApplication.reset(new LaunchpadListApp(_arglist, _console, *_lpDevice));
-            }
-            break;
-        case LaunchpadAppType::kCYCLE:
-            {
-                _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadCycleApp(_arglist, _console, *_lpDevice, arg::delay(_lpDelay)));
-            }
-            break;
-        case LaunchpadAppType::kPRINT:
-            {
-                _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadPrintApp(_arglist, _console, *_lpDevice, _lpString, arg::delay(_lpDelay)));
-            }
-            break;
-        case LaunchpadAppType::kSCROLL:
-            {
-                _lpDevice.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpApplication.reset(new LaunchpadScrollApp(_arglist, _console, *_lpDevice, _lpString, arg::delay(_lpDelay)));
-            }
-            break;
-        default:
-            break;
+    if(_lpLaunchpadApp) {
+        try {
+            _lpLaunchpadApp->main();
+            _lpLaunchpadApp->shutdown();
+        }
+        catch(...) {
+            _lpLaunchpadApp->shutdown();
+        }
     }
-    if(_lpApplication) {
-        return _lpApplication->main();
+    static_cast<void>(::kill(::getpid(), SIGTERM));
+}
+
+void Application::onTimeout()
+{
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->terminated()) {
+            _lpShouldExit = true;
+        }
     }
-    return help();
+}
+
+void Application::onSigALRM()
+{
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->terminated()) {
+            _lpShouldExit = true;
+        }
+    }
+}
+
+void Application::onSigUSR1()
+{
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->terminated()) {
+            _lpShouldExit = true;
+        }
+    }
+}
+
+void Application::onSigUSR2()
+{
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->terminated()) {
+            _lpShouldExit = true;
+        }
+    }
+}
+
+void Application::onSigPIPE()
+{
+}
+
+void Application::onSigCHLD()
+{
+}
+
+void Application::onSigTERM()
+{
+    _lpShouldExit = true;
+}
+
+void Application::onSigINTR()
+{
+    _lpShouldExit = true;
+}
+
+void Application::onSigHGUP()
+{
 }
 
 // ---------------------------------------------------------------------------

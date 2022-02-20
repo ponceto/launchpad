@@ -56,7 +56,22 @@ public: // public interface
 
     virtual ~LaunchpadApp();
 
-    virtual int main() = 0;
+    virtual void main() = 0;
+
+    void shutdown()
+    {
+        _terminate = true;
+    }
+
+    bool running() const
+    {
+        return _terminate == false;
+    }
+
+    bool terminated() const
+    {
+        return _terminate != false;
+    }
 
 protected: // protected data
     const ArgList& _arglist;
@@ -67,6 +82,7 @@ protected: // protected data
     const uint8_t  _green;
     const uint8_t  _yellow;
     const uint32_t _delay;
+    bool           _terminate;
 };
 
 // ---------------------------------------------------------------------------
@@ -83,7 +99,7 @@ public: // public interface
 
     virtual ~LaunchpadListApp();
 
-    virtual int main();
+    virtual void main();
 };
 
 // ---------------------------------------------------------------------------
@@ -101,7 +117,7 @@ public: // public interface
 
     virtual ~LaunchpadCycleApp();
 
-    virtual int main();
+    virtual void main();
 };
 
 // ---------------------------------------------------------------------------
@@ -120,7 +136,7 @@ public: // public interface
 
     virtual ~LaunchpadPrintApp();
 
-    virtual int main();
+    virtual void main();
 
 private: // private data
     const std::string _string;
@@ -142,7 +158,7 @@ public: // public interface
 
     virtual ~LaunchpadScrollApp();
 
-    virtual int main();
+    virtual void main();
 
 private: // private data
     const std::string _string;
