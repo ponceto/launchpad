@@ -58,35 +58,35 @@ void Program::onTimeout()
 {
 }
 
-void Program::onSigALRM()
+void Program::onSIGALRM()
 {
 }
 
-void Program::onSigUSR1()
+void Program::onSIGUSR1()
 {
 }
 
-void Program::onSigUSR2()
+void Program::onSIGUSR2()
 {
 }
 
-void Program::onSigPIPE()
+void Program::onSIGPIPE()
 {
 }
 
-void Program::onSigCHLD()
+void Program::onSIGCHLD()
 {
 }
 
-void Program::onSigTERM()
+void Program::onSIGTERM()
 {
 }
 
-void Program::onSigINTR()
+void Program::onSIGINTR()
 {
 }
 
-void Program::onSigHGUP()
+void Program::onSIGHGUP()
 {
 }
 

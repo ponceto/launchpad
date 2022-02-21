@@ -22,14 +22,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
-#include <csignal>
 #include <memory>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
-#include <unistd.h>
 #include "Application.h"
 
 // ---------------------------------------------------------------------------
@@ -103,151 +100,6 @@ struct arg
             throw std::runtime_error("invalid delay");
         }
         return value;
-    }
-};
-
-}
-
-// ---------------------------------------------------------------------------
-// <anonymous>::sig
-// ---------------------------------------------------------------------------
-
-namespace {
-
-struct sig
-{
-    using native_sigset    = sigset_t;
-    using native_sigaction = struct sigaction;
-    using native_timespec  = struct timespec;
-
-    static constexpr int kSIGALRM = SIGALRM;
-    static constexpr int kSIGUSR1 = SIGUSR1;
-    static constexpr int kSIGUSR2 = SIGUSR2;
-    static constexpr int kSIGPIPE = SIGPIPE;
-    static constexpr int kSIGCHLD = SIGCHLD;
-    static constexpr int kSIGTERM = SIGTERM;
-    static constexpr int kSIGINTR = SIGINT;
-    static constexpr int kSIGHGUP = SIGHUP;
-
-    static void default_handler(int signum)
-    {
-        static_cast<void>(signum);
-    }
-
-    static void emptyset(native_sigset& signal_set)
-    {
-        const int rc = ::sigemptyset(&signal_set);
-        if(rc != 0) {
-            throw std::runtime_error("sigemptyset has failed");
-        }
-    }
-
-    static void fillset(native_sigset& signal_set)
-    {
-        const int rc = ::sigfillset(&signal_set);
-        if(rc != 0) {
-            throw std::runtime_error("sigfillset has failed");
-        }
-    }
-
-    static void addset(native_sigset& signal_set, const int signum)
-    {
-        const int rc = ::sigaddset(&signal_set, signum);
-        if(rc != 0) {
-            throw std::runtime_error("sigaddset has failed");
-        }
-    }
-
-    static void delset(native_sigset& signal_set, const int signum)
-    {
-        const int rc = ::sigdelset(&signal_set, signum);
-        if(rc != 0) {
-            throw std::runtime_error("sigdelset has failed");
-        }
-    }
-
-    static void procmask(const int how, const native_sigset& signal_set)
-    {
-       const int rc = ::pthread_sigmask(how, &signal_set, nullptr);
-        if(rc != 0) {
-            throw std::runtime_error("sigprocmask has failed");
-        }
-    }
-
-    static int timedwait(const native_sigset& signal_set, const native_timespec& timeout)
-    {
-        const int rc = ::sigtimedwait(&signal_set, nullptr, &timeout);
-        if((rc == -1) && (errno != EAGAIN)) {
-            throw std::runtime_error("sigtimedwait has failed");
-        }
-        return rc;
-    }
-
-    static void action(const int signum, const native_sigaction& act)
-    {
-        const int rc = ::sigaction(signum, &act, nullptr);
-        if(rc != 0) {
-            throw std::runtime_error("sigaction has failed");
-        }
-    }
-
-    static void init()
-    {
-        native_sigset    signal_set;
-        native_sigaction signal_action;
-
-        /* initialize signal_set */ {
-            sig::emptyset(signal_set);
-            sig::addset(signal_set, kSIGALRM);
-            sig::addset(signal_set, kSIGUSR1);
-            sig::addset(signal_set, kSIGUSR2);
-            sig::addset(signal_set, kSIGPIPE);
-            sig::addset(signal_set, kSIGCHLD);
-            sig::addset(signal_set, kSIGTERM);
-            sig::addset(signal_set, kSIGINTR);
-            sig::addset(signal_set, kSIGHGUP);
-        }
-        /* initialize signal_action */ {
-            signal_action.sa_handler = &sig::default_handler;
-            signal_action.sa_flags   = 0;
-            signal_action.sa_mask    = signal_set;
-        }
-        /* install signal handlers */ {
-            sig::action(kSIGALRM, signal_action);
-            sig::action(kSIGUSR1, signal_action);
-            sig::action(kSIGUSR2, signal_action);
-            sig::action(kSIGPIPE, signal_action);
-            sig::action(kSIGCHLD, signal_action);
-            sig::action(kSIGTERM, signal_action);
-            sig::action(kSIGINTR, signal_action);
-            sig::action(kSIGHGUP, signal_action);
-        }
-        /* mask signals */ {
-            sig::procmask(SIG_BLOCK, signal_set);
-        }
-    }
-
-    static int wait()
-    {
-        native_sigset   signal_set;
-        native_timespec timeout;
-
-        /* initialize signal_set */ {
-            sig::emptyset(signal_set);
-            sig::addset(signal_set, kSIGALRM);
-            sig::addset(signal_set, kSIGUSR1);
-            sig::addset(signal_set, kSIGUSR2);
-            sig::addset(signal_set, kSIGPIPE);
-            sig::addset(signal_set, kSIGCHLD);
-            sig::addset(signal_set, kSIGTERM);
-            sig::addset(signal_set, kSIGINTR);
-            sig::addset(signal_set, kSIGHGUP);
-        }
-        /* initialize timespec */ {
-            timeout.tv_sec  = 1L;
-            timeout.tv_nsec = 0L;
-        }
-        return sig::timedwait(signal_set, timeout);
     }
 };
 
@@ -346,10 +198,10 @@ int Application::main()
             }
         }
     }
-    return init();
+    return loop();
 }
 
-int Application::init()
+int Application::loop()
 {
     switch(_lpAppType) {
         case LaunchpadAppType::kHELP:
@@ -382,59 +234,10 @@ int Application::init()
             break;
     }
     if(_lpLaunchpadApp) {
-        return loop();
+        _lpLaunchpadApp->main();
     }
-    return help();
-}
-
-int Application::loop()
-{
-    std::thread thread;
-
-    /* initialize signals */ {
-        sig::init();
-    }
-    /* start thread */ {
-        std::thread(&Application::run, this).swap(thread);
-    }
-    /* main loop */ {
-        while(running()) {
-            const int signum = sig::wait();
-            if(signum == -1) {
-                onTimeout();
-            }
-            else switch(signum) {
-                case sig::kSIGALRM:
-                    onSigALRM();
-                    break;
-                case sig::kSIGUSR1:
-                    onSigUSR1();
-                    break;
-                case sig::kSIGUSR2:
-                    onSigUSR2();
-                    break;
-                case sig::kSIGPIPE:
-                    onSigPIPE();
-                    break;
-                case sig::kSIGCHLD:
-                    onSigCHLD();
-                    break;
-                case sig::kSIGTERM:
-                    onSigTERM();
-                    break;
-                case sig::kSIGINTR:
-                    onSigINTR();
-                    break;
-                case sig::kSIGHGUP:
-                    onSigHGUP();
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    /* join thread */ {
-        thread.join();
+    else {
+        return help();
     }
     return EXIT_SUCCESS;
 }
@@ -471,24 +274,12 @@ int Application::help()
     return EXIT_SUCCESS;
 }
 
-void Application::run()
-{
-    if(_lpLaunchpadApp) {
-        try {
-            _lpLaunchpadApp->main();
-            _lpLaunchpadApp->shutdown();
-        }
-        catch(...) {
-            _lpLaunchpadApp->shutdown();
-        }
-    }
-    static_cast<void>(::kill(::getpid(), SIGTERM));
-}
-
 void Application::stop()
 {
-    if(_lpLaunchpadApp->running()) {
-        _lpLaunchpadApp->shutdown();
+    if(_lpLaunchpadApp) {
+        if(_lpLaunchpadApp->running()) {
+            _lpLaunchpadApp->shutdown();
+        }
     }
     _lpShutdown = true;
 }
@@ -517,37 +308,37 @@ void Application::onTimeout()
 {
 }
 
-void Application::onSigALRM()
+void Application::onSIGALRM()
 {
 }
 
-void Application::onSigUSR1()
+void Application::onSIGUSR1()
 {
 }
 
-void Application::onSigUSR2()
+void Application::onSIGUSR2()
 {
 }
 
-void Application::onSigPIPE()
+void Application::onSIGPIPE()
 {
 }
 
-void Application::onSigCHLD()
+void Application::onSIGCHLD()
 {
 }
 
-void Application::onSigTERM()
-{
-    stop();
-}
-
-void Application::onSigINTR()
+void Application::onSIGTERM()
 {
     stop();
 }
 
-void Application::onSigHGUP()
+void Application::onSIGINTR()
+{
+    stop();
+}
+
+void Application::onSIGHGUP()
 {
     stop();
 }

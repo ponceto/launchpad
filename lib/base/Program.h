@@ -36,14 +36,14 @@ public: // public interface
     virtual void stop();
 
     virtual void onTimeout();
-    virtual void onSigALRM();
-    virtual void onSigUSR1();
-    virtual void onSigUSR2();
-    virtual void onSigPIPE();
-    virtual void onSigCHLD();
-    virtual void onSigTERM();
-    virtual void onSigINTR();
-    virtual void onSigHGUP();
+    virtual void onSIGALRM();
+    virtual void onSIGUSR1();
+    virtual void onSIGUSR2();
+    virtual void onSIGPIPE();
+    virtual void onSIGCHLD();
+    virtual void onSIGTERM();
+    virtual void onSIGINTR();
+    virtual void onSIGHGUP();
 
 protected: // protected data
     const ArgList& _arglist;

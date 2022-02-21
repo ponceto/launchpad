@@ -37,23 +37,21 @@ public: // public interface
     virtual void stop() override;
 
     virtual void onTimeout() override;
-    virtual void onSigALRM() override;
-    virtual void onSigUSR1() override;
-    virtual void onSigUSR2() override;
-    virtual void onSigPIPE() override;
-    virtual void onSigCHLD() override;
-    virtual void onSigTERM() override;
-    virtual void onSigINTR() override;
-    virtual void onSigHGUP() override;
+    virtual void onSIGALRM() override;
+    virtual void onSIGUSR1() override;
+    virtual void onSIGUSR2() override;
+    virtual void onSIGPIPE() override;
+    virtual void onSIGCHLD() override;
+    virtual void onSIGTERM() override;
+    virtual void onSIGINTR() override;
+    virtual void onSIGHGUP() override;
 
-protected: // protected interface
-    virtual int init();
-    virtual int loop();
-    virtual int help();
-
-    virtual void run();
     virtual bool running();
     virtual bool terminated();
+
+protected: // protected interface
+    virtual int loop();
+    virtual int help();
 
 protected: // protected data
     std::string           _lpName;
@@ -66,12 +64,6 @@ protected: // protected data
     LaunchpadAppUniquePtr _lpLaunchpadApp;
     bool                  _lpShutdown;
 };
-
-// ---------------------------------------------------------------------------
-// ApplicationUniquePtr
-// ---------------------------------------------------------------------------
-
-using ApplicationUniquePtr = std::unique_ptr<Application>;
 
 // ---------------------------------------------------------------------------
 // End-Of-File
