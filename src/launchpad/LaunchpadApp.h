@@ -17,9 +17,9 @@
 #ifndef __LaunchpadApp_h__
 #define __LaunchpadApp_h__
 
+#include <base/ArgList.h>
+#include <base/Console.h>
 #include <novation/Launchpad.h>
-#include "ArgList.h"
-#include "Console.h"
 
 // ---------------------------------------------------------------------------
 // some aliases

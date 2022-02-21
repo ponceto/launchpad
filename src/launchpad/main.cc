@@ -29,12 +29,12 @@
 #include "Application.h"
 
 // ---------------------------------------------------------------------------
-// <anonymous>::stage2
+// <anonymous>::run
 // ---------------------------------------------------------------------------
 
 namespace {
 
-int stage2(const ArgList& arglist, const Console& console)
+int run(const ArgList& arglist, const Console& console)
 {
     const ApplicationUniquePtr app(new Application(arglist, console));
 
@@ -44,15 +44,15 @@ int stage2(const ArgList& arglist, const Console& console)
 }
 
 // ---------------------------------------------------------------------------
-// <anonymous>::stage1
+// <anonymous>::loop
 // ---------------------------------------------------------------------------
 
 namespace {
 
-int stage1(const ArgList& arglist, const Console& console)
+int loop(const ArgList& arglist, const Console& console)
 {
     try {
-        return stage2(arglist, console);
+        return run(arglist, console);
     }
     catch(const std::exception& e) {
         const char* const what(e.what());
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
                           , std::cout
                           , std::cerr );
 
-    return stage1(arglist, console);
+    return loop(arglist, console);
 }
 
 // ---------------------------------------------------------------------------

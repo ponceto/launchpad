@@ -19,13 +19,21 @@
 # variables
 # ----------------------------------------------------------------------------
 
-NOVATION_xCPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/src
-NOVATION_xLDFLAGS = -L$(top_builddir)/lib -L$(top_builddir)/src
+LAUNCHPAD_xCPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/src
+LAUNCHPAD_xLDFLAGS = -L$(top_builddir)/lib -L$(top_builddir)/src
+LAUNCHPAD_xLDADD = 
+
+NOVATION_xCPPFLAGS = 
+NOVATION_xLDFLAGS = 
 NOVATION_xLDADD = $(top_builddir)/lib/novation/libnovation.la
 
 RTMIDI_xCPPFLAGS = $(rtmidi_CFLAGS)
 RTMIDI_xLDFLAGS = $(rtmidi_LDFLAGS)
 RTMIDI_xLDADD = $(rtmidi_LIBS)
+
+BASE_xCPPFLAGS = 
+BASE_xLDFLAGS = 
+BASE_xLDADD = $(top_builddir)/lib/base/libbase.la
 
 # ----------------------------------------------------------------------------
 # bin_PROGRAMS
@@ -40,10 +48,6 @@ bin_PROGRAMS = \
 # ----------------------------------------------------------------------------
 
 launchpad_SOURCES = \
-	ArgList.cc \
-	ArgList.h \
-	Console.cc \
-	Console.h \
 	Font8x8.cc \
 	Font8x8.h \
 	LaunchpadApp.cc \
@@ -54,18 +58,24 @@ launchpad_SOURCES = \
 	$(NULL)
 
 launchpad_CPPFLAGS = \
+	$(LAUNCHPAD_xCPPFLAGS) \
 	$(NOVATION_xCPPFLAGS) \
 	$(RTMIDI_xCPPFLAGS) \
+	$(BASE_xCPPFLAGS) \
 	$(NULL)
 
 launchpad_LDFLAGS = \
+	$(LAUNCHPAD_xLDFLAGS) \
 	$(NOVATION_xLDFLAGS) \
 	$(RTMIDI_xLDFLAGS) \
+	$(BASE_xLDFLAGS) \
 	$(NULL)
 
 launchpad_LDADD = \
+	$(LAUNCHPAD_xLDADD) \
 	$(NOVATION_xLDADD) \
 	$(RTMIDI_xLDADD) \
+	$(BASE_xLDADD) \
 	$(NULL)
 
 # ----------------------------------------------------------------------------

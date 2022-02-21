@@ -19,46 +19,41 @@
 # globals
 # ----------------------------------------------------------------------------
 
-NOVATION_xCPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/src
-NOVATION_xLDFLAGS = -L$(top_builddir)/lib -L$(top_builddir)/src
-NOVATION_xLIBADD = -lpthread
-
-RTMIDI_xCPPFLAGS = $(rtmidi_CFLAGS)
-RTMIDI_xLDFLAGS = $(rtmidi_LDFLAGS)
-RTMIDI_xLIBADD = $(rtmidi_LIBS)
+BASE_xCPPFLAGS = -I$(top_srcdir)/lib -I$(top_srcdir)/src
+BASE_xLDFLAGS = -L$(top_builddir)/lib -L$(top_builddir)/src
+BASE_xLIBADD = -lpthread
 
 # ----------------------------------------------------------------------------
 # noinst_LTLIBRARIES
 # ----------------------------------------------------------------------------
 
 noinst_LTLIBRARIES = \
-	libnovation.la \
+	libbase.la \
 	$(NULL)
 
 # ----------------------------------------------------------------------------
-# libnovation
+# libbase
 # ----------------------------------------------------------------------------
 
-libnovation_la_SOURCES = \
-	Midi.cc \
-	Midi.h \
-	Launchpad.cc \
-	Launchpad.h \
+libbase_la_SOURCES = \
+	ArgList.cc \
+	ArgList.h \
+	Console.cc \
+	Console.h \
+	Program.cc \
+	Program.h \
 	$(NULL)
 
-libnovation_la_CPPFLAGS = \
-	$(NOVATION_xCPPFLAGS) \
-	$(RTMIDI_xCPPFLAGS) \
+libbase_la_CPPFLAGS = \
+	$(BASE_xCPPFLAGS) \
 	$(NULL)
 
-libnovation_la_LDFLAGS = \
-	$(NOVATION_xLDFLAGS) \
-	$(RTMIDI_xLDFLAGS) \
+libbase_la_LDFLAGS = \
+	$(BASE_xLDFLAGS) \
 	$(NULL)
 
-libnovation_la_LIBADD = \
-	$(NOVATION_xLIBADD) \
-	$(RTMIDI_xLIBADD) \
+libbase_la_LIBADD = \
+	$(BASE_xLIBADD) \
 	$(NULL)
 
 # ----------------------------------------------------------------------------

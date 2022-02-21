@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __ArgList_h__
-#define __ArgList_h__
+#ifndef __BASE_ArgList_h__
+#define __BASE_ArgList_h__
 
 // ---------------------------------------------------------------------------
 // ArgList
@@ -51,4 +51,4 @@ struct ArgList
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __ArgList_h__ */
+#endif /* __BASE_ArgList_h__ */

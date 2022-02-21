@@ -17,15 +17,15 @@
 #ifndef __Application_h__
 #define __Application_h__
 
-#include "ArgList.h"
-#include "Console.h"
+#include <base/Program.h>
 #include "LaunchpadApp.h"
 
 // ---------------------------------------------------------------------------
 // Application
 // ---------------------------------------------------------------------------
 
-class Application
+class Application final
+    : public Program
 {
 public: // public interface
     Application ( const ArgList&
@@ -33,7 +33,18 @@ public: // public interface
 
     virtual ~Application();
 
-    virtual int main();
+    virtual int  main() override;
+    virtual void stop() override;
+
+    virtual void onTimeout() override;
+    virtual void onSigALRM() override;
+    virtual void onSigUSR1() override;
+    virtual void onSigUSR2() override;
+    virtual void onSigPIPE() override;
+    virtual void onSigCHLD() override;
+    virtual void onSigTERM() override;
+    virtual void onSigINTR() override;
+    virtual void onSigHGUP() override;
 
 protected: // protected interface
     virtual int init();
@@ -41,23 +52,10 @@ protected: // protected interface
     virtual int help();
 
     virtual void run();
-    virtual void shutdown();
     virtual bool running();
     virtual bool terminated();
 
-    virtual void onTimeout();
-    virtual void onSigALRM();
-    virtual void onSigUSR1();
-    virtual void onSigUSR2();
-    virtual void onSigPIPE();
-    virtual void onSigCHLD();
-    virtual void onSigTERM();
-    virtual void onSigINTR();
-    virtual void onSigHGUP();
-
 protected: // protected data
-    const ArgList&        _arglist;
-    const Console&        _console;
     std::string           _lpName;
     std::string           _lpInput;
     std::string           _lpOutput;
@@ -67,10 +65,6 @@ protected: // protected data
     LaunchpadUniquePtr    _lpLaunchpad;
     LaunchpadAppUniquePtr _lpLaunchpadApp;
     bool                  _lpShutdown;
-
-private: // disable copy and assignment
-    Application(const Application&) = delete;
-    Application& operator=(const Application&) = delete;
 };
 
 // ---------------------------------------------------------------------------

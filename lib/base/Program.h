@@ -1,5 +1,5 @@
 /*
- * Console.h - Copyright (c) 2001-2022 - Olivier Poncet
+ * Program.h - Copyright (c) 2001-2022 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,38 +14,44 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __Console_h__
-#define __Console_h__
+#ifndef __Program_h__
+#define __Program_h__
+
+#include <base/ArgList.h>
+#include <base/Console.h>
 
 // ---------------------------------------------------------------------------
-// some aliases
+// Program
 // ---------------------------------------------------------------------------
 
-using IStream = std::istream;
-using OStream = std::ostream;
-
-// ---------------------------------------------------------------------------
-// Console
-// ---------------------------------------------------------------------------
-
-struct Console
+class Program
 {
-    Console ( IStream& is
-            , OStream& os
-            , OStream& es )
-        : inputStream(is)
-        , printStream(os)
-        , errorStream(es)
-    {
-    }
+public: // public interface
+    Program ( const ArgList&
+            , const Console& );
 
-    IStream& inputStream;
-    OStream& printStream;
-    OStream& errorStream;
+    virtual ~Program();
+
+    virtual int  main();
+    virtual void stop();
+
+    virtual void onTimeout();
+    virtual void onSigALRM();
+    virtual void onSigUSR1();
+    virtual void onSigUSR2();
+    virtual void onSigPIPE();
+    virtual void onSigCHLD();
+    virtual void onSigTERM();
+    virtual void onSigINTR();
+    virtual void onSigHGUP();
+
+protected: // protected data
+    const ArgList& _arglist;
+    const Console& _console;
 };
 
 // ---------------------------------------------------------------------------
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __Console_h__ */
+#endif /* __Program_h__ */

@@ -67,8 +67,8 @@ AX_CHECK_BYTE_ORDER
 # ----------------------------------------------------------------------------
 
 AX_CHECK_HEADERS
+AX_CHECK_PTHREAD
 AX_CHECK_RTMIDI
-AX_PTHREAD
 
 # ----------------------------------------------------------------------------
 # Defines
@@ -98,6 +98,7 @@ AC_CONFIG_FILES([
 	Makefile
 	doc/Makefile
 	lib/Makefile
+	lib/base/Makefile
 	lib/novation/Makefile
 	src/Makefile
 	src/launchpad/Makefile
