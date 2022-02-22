@@ -36,12 +36,13 @@ using Console            = base::Console;
 
 enum class LaunchpadAppType
 {
-    kNONE   = 0,
-    kHELP   = 1,
-    kLIST   = 2,
-    kCYCLE  = 3,
-    kPRINT  = 4,
-    kSCROLL = 5,
+    kNONE       = 0,
+    kHELP       = 1,
+    kLIST       = 2,
+    kCYCLE      = 3,
+    kPRINT      = 4,
+    kSCROLL     = 5,
+    kGAMEOFLIFE = 6,
 };
 
 // ---------------------------------------------------------------------------
@@ -62,29 +63,19 @@ public: // public interface
 
     void shutdown()
     {
-        _terminate = true;
-    }
-
-    bool running() const
-    {
-        return _terminate == false;
-    }
-
-    bool terminated() const
-    {
-        return _terminate != false;
+        _shutdown = true;
     }
 
 protected: // protected data
     const ArgList& _arglist;
     const Console& _console;
     Launchpad&     _launchpad;
+    const uint64_t _delay;
     const uint8_t  _black;
     const uint8_t  _red;
     const uint8_t  _green;
     const uint8_t  _yellow;
-    const uint64_t _delay;
-    bool           _terminate;
+    bool           _shutdown;
 };
 
 // ---------------------------------------------------------------------------
@@ -159,6 +150,28 @@ public: // public interface
                        , const uint64_t     delay );
 
     virtual ~LaunchpadScrollApp();
+
+    virtual void main();
+
+private: // private data
+    const std::string _string;
+};
+
+// ---------------------------------------------------------------------------
+// LaunchpadGameOfLifeApp
+// ---------------------------------------------------------------------------
+
+class LaunchpadGameOfLifeApp
+    : public LaunchpadApp
+{
+public: // public interface
+    LaunchpadGameOfLifeApp ( const ArgList&     arglist
+                           , const Console&     console
+                           , Launchpad&         launchpad
+                           , const std::string& string
+                           , const uint64_t     delay );
+
+    virtual ~LaunchpadGameOfLifeApp();
 
     virtual void main();
 

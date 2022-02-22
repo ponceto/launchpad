@@ -158,7 +158,6 @@ Application::Application ( const ArgList& arglist
      , _lpAppType(LaunchpadAppType::kNONE)
      , _lpLaunchpad()
      , _lpLaunchpadApp()
-     , _lpShutdown()
 {
 }
 
@@ -218,6 +217,17 @@ int Application::main()
                     }
                 }
             }
+            else if(arg::is(argument, "--game-of-life")) {
+                if(_lpAppType == LaunchpadAppType::kNONE) {
+                    _lpAppType = LaunchpadAppType::kGAMEOFLIFE;
+                    if(argval.size() != 0) {
+                        _lpString = argval;
+                    }
+                    if(_lpDelay.empty()) {
+                        _lpDelay = "500ms";
+                    }
+                }
+            }
             else if(arg::is(argument, "--delay")) {
                 _lpDelay  = argval;
             }
@@ -268,6 +278,12 @@ int Application::loop()
                 _lpLaunchpadApp = std::make_unique<LaunchpadScrollApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
             }
             break;
+        case LaunchpadAppType::kGAMEOFLIFE:
+            {
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpLaunchpadApp = std::make_unique<LaunchpadGameOfLifeApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
+            }
+            break;
         default:
             break;
     }
@@ -293,6 +309,7 @@ int Application::help()
         _console.printStream << "    --cycle                     cycle colors"              << std::endl;
         _console.printStream << "    --print={text}              print a text"              << std::endl;
         _console.printStream << "    --scroll={text}             scroll a text"             << std::endl;
+        _console.printStream << "    --game-of-life={pattern}    Conway's game of life"     << std::endl;
         _console.printStream << ""                                                          << std::endl;
         _console.printStream << "    --delay={value[us|ms|s|m]}  delay (ms by default)"     << std::endl;
         _console.printStream << ""                                                          << std::endl;
@@ -315,31 +332,8 @@ int Application::help()
 void Application::stop()
 {
     if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->running()) {
-            _lpLaunchpadApp->shutdown();
-        }
+        _lpLaunchpadApp->shutdown();
     }
-    _lpShutdown = true;
-}
-
-bool Application::running()
-{
-    if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->terminated()) {
-            _lpShutdown = true;
-        }
-    }
-    return _lpShutdown == false;
-}
-
-bool Application::terminated()
-{
-    if(_lpLaunchpadApp) {
-        if(_lpLaunchpadApp->terminated()) {
-            _lpShutdown = true;
-        }
-    }
-    return _lpShutdown != false;
 }
 
 void Application::onTimeout()

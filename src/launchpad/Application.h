@@ -54,9 +54,6 @@ public: // public interface
     virtual void onSIGINTR() override;
     virtual void onSIGHGUP() override;
 
-    virtual bool running();
-    virtual bool terminated();
-
 protected: // protected interface
     virtual int loop();
     virtual int help();
@@ -70,7 +67,6 @@ protected: // protected data
     LaunchpadAppType      _lpAppType;
     LaunchpadUniquePtr    _lpLaunchpad;
     LaunchpadAppUniquePtr _lpLaunchpadApp;
-    bool                  _lpShutdown;
 };
 
 // ---------------------------------------------------------------------------
