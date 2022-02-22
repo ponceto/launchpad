@@ -14,15 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __Program_h__
-#define __Program_h__
+#ifndef __BASE_Program_h__
+#define __BASE_Program_h__
 
 #include <base/ArgList.h>
 #include <base/Console.h>
 
 // ---------------------------------------------------------------------------
-// Program
+// base::Program
 // ---------------------------------------------------------------------------
+
+namespace base {
 
 class Program
 {
@@ -50,8 +52,10 @@ protected: // protected data
     const Console& _console;
 };
 
+}
+
 // ---------------------------------------------------------------------------
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __Program_h__ */
+#endif /* __BASE_Program_h__ */

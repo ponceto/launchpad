@@ -37,6 +37,11 @@ namespace {
 
 struct arg
 {
+    static constexpr long US_SCALE = 1L;
+    static constexpr long MS_SCALE = 1000L;
+    static constexpr long SS_SCALE = 1000L * 1000L;
+    static constexpr long MN_SCALE = 1000L * 1000L * 60L;
+
     static const char* basename(const std::string& argument)
     {
         const char* str = argument.c_str();
@@ -78,28 +83,61 @@ struct arg
         return "";
     }
 
-    static uint32_t delay(const std::string& argument)
+    static std::string to_lower(const std::string& argument)
+    {
+        std::string string(argument);
+        for(auto& character : string) {
+            character = ::tolower(character);
+        }
+        return string;
+    }
+
+    static std::string to_upper(const std::string& argument)
+    {
+        std::string string(argument);
+        for(auto& character : string) {
+            character = ::toupper(character);
+        }
+        return string;
+    }
+
+    static uint64_t delay(const std::string& argument)
     {
         const char* string = argument.c_str();
         const char* endptr = nullptr;
         const long  value  = ::strtol(string, const_cast<char**>(&endptr), 10);
 
+        auto check = [&](const long delay) -> uint64_t
+        {
+            constexpr long min_delay = 0UL;
+            constexpr long max_delay = 1000000UL;
+            if((delay < min_delay) || (delay > max_delay)) {
+                char error[256];
+                const int rc = ::snprintf(error, sizeof(error), "invalid delay <%s>: it must be expressed in [us, ms, s, m] and must be [%ldms <= delay <= %ldms]", string, (min_delay / 1000), (max_delay / 1000));
+                if((rc < 0) || (rc == sizeof(error))) {
+                    throw std::runtime_error("invalid delay");
+                }
+                throw std::runtime_error(error);
+            }
+            return delay;
+        };
+
         if((endptr != nullptr) && (*endptr != '\0')) {
+            if(::strcmp(endptr, "us") == 0) {
+                return check(value * US_SCALE);
+            }
             if(::strcmp(endptr, "ms") == 0) {
-                return value;
+                return check(value * MS_SCALE);
             }
             if(::strcmp(endptr, "s") == 0) {
-                return value * 1000;
+                return check(value * SS_SCALE);
             }
             if(::strcmp(endptr, "m") == 0) {
-                return value * 1000 * 60;
+                return check(value * MN_SCALE);
             }
-            throw std::runtime_error("invalid delay");
+            return check(-1);
         }
-        if(value <= 0) {
-            throw std::runtime_error("invalid delay");
-        }
-        return value;
+        return check(value * MS_SCALE);
     }
 };
 
@@ -208,26 +246,26 @@ int Application::loop()
             break;
         case LaunchpadAppType::kLIST:
             {
-                _lpLaunchpad.reset(new Launchpad(_lpName));
-                _lpLaunchpadApp.reset(new LaunchpadListApp(_arglist, _console, *_lpLaunchpad));
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
+                _lpLaunchpadApp = std::make_unique<LaunchpadListApp>(_arglist, _console, *_lpLaunchpad);
             }
             break;
         case LaunchpadAppType::kCYCLE:
             {
-                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpLaunchpadApp.reset(new LaunchpadCycleApp(_arglist, _console, *_lpLaunchpad, arg::delay(_lpDelay)));
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpLaunchpadApp = std::make_unique<LaunchpadCycleApp>(_arglist, _console, *_lpLaunchpad, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kPRINT:
             {
-                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpLaunchpadApp.reset(new LaunchpadPrintApp(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay)));
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpLaunchpadApp = std::make_unique<LaunchpadPrintApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kSCROLL:
             {
-                _lpLaunchpad.reset(new Launchpad(_lpName, _lpInput, _lpOutput));
-                _lpLaunchpadApp.reset(new LaunchpadScrollApp(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay)));
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpLaunchpadApp = std::make_unique<LaunchpadScrollApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
             }
             break;
         default:
@@ -256,7 +294,7 @@ int Application::help()
         _console.printStream << "    --print={text}              print a text"              << std::endl;
         _console.printStream << "    --scroll={text}             scroll a text"             << std::endl;
         _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    --delay={value[ms|s|m]}     delay (ms by default)"     << std::endl;
+        _console.printStream << "    --delay={value[us|ms|s|m]}  delay (ms by default)"     << std::endl;
         _console.printStream << ""                                                          << std::endl;
         _console.printStream << "    --midi={port}               MIDI input/output"         << std::endl;
         _console.printStream << "    --midi-input={port}         MIDI input"                << std::endl;

@@ -60,9 +60,9 @@ struct lp
              ;
     }
 
-    static void sleep(Launchpad& launchpad, const uint32_t delay)
+    static void sleep(Launchpad& launchpad, const uint64_t delay)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+        std::this_thread::sleep_for(std::chrono::microseconds(delay));
     }
 
     static void reset(Launchpad& launchpad)
@@ -82,7 +82,7 @@ struct lp
         launchpad.setBuffer(0, 0, false, false);
     }
 
-    static void cycle(Launchpad& launchpad, const uint32_t delay, bool& terminate)
+    static void cycle(Launchpad& launchpad, const uint64_t delay, bool& terminate)
     {
         for(int r = 0; r < 256; r += 64) {
             for(int g = 0; g < 256; g += 64) {
@@ -98,7 +98,7 @@ struct lp
         }
     }
 
-    static void print(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay, bool& terminate)
+    static void print(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint64_t delay, bool& terminate)
     {
         for(auto character : string) {
             launchpad.setBuffer(0, 1, false, false);
@@ -125,7 +125,7 @@ struct lp
         }
     }
 
-    static void scroll(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint32_t delay, bool& terminate)
+    static void scroll(Launchpad& launchpad, const std::string& string, const uint8_t foreground, const uint8_t background, const uint64_t delay, bool& terminate)
     {
         const char*  data = string.c_str();
         const size_t size = string.size();
@@ -189,7 +189,7 @@ struct lp
 LaunchpadApp::LaunchpadApp ( const ArgList& arglist
                            , const Console& console
                            , Launchpad&     launchpad
-                           , uint32_t       delay )
+                           , uint64_t       delay )
     : _arglist(arglist)
     , _console(console)
     , _launchpad(launchpad)
@@ -238,7 +238,7 @@ void LaunchpadListApp::main()
 LaunchpadCycleApp::LaunchpadCycleApp ( const ArgList& arglist
                                      , const Console& console
                                      , Launchpad&     launchpad
-                                     , const uint32_t delay )
+                                     , const uint64_t delay )
     : LaunchpadApp(arglist, console, launchpad, delay)
 {
 }
@@ -264,7 +264,7 @@ LaunchpadPrintApp::LaunchpadPrintApp ( const ArgList&     arglist
                                      , const Console&     console
                                      , Launchpad&         launchpad
                                      , const std::string& string
-                                     , const uint32_t     delay )
+                                     , const uint64_t     delay )
     : LaunchpadApp(arglist, console, launchpad, delay)
     , _string(string)
 {
@@ -291,7 +291,7 @@ LaunchpadScrollApp::LaunchpadScrollApp ( const ArgList&     arglist
                                        , const Console&     console
                                        , Launchpad&         launchpad
                                        , const std::string& string
-                                       , const uint32_t     delay )
+                                       , const uint64_t     delay )
     : LaunchpadApp(arglist, console, launchpad, delay)
     , _string(string)
 {

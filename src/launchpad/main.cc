@@ -22,41 +22,16 @@
 #include <cstring>
 #include <cstdint>
 #include <csignal>
+#include <unistd.h>
 #include <memory>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <stdexcept>
+#include <atomic>
 #include <thread>
-#include <unistd.h>
+#include <mutex>
 #include "Application.h"
-
-// ---------------------------------------------------------------------------
-// thr::autojoin
-// ---------------------------------------------------------------------------
-
-namespace thr {
-
-class autojoin
-{
-public:
-    autojoin(std::thread& thread)
-        : _thread(thread)
-    {
-    }
-
-   ~autojoin()
-    {
-        if(_thread.joinable()) {
-            _thread.join();
-        }
-    }
-
-private:
-    std::thread& _thread;
-};
-
-}
 
 // ---------------------------------------------------------------------------
 // <anonymous>::sig
@@ -149,7 +124,7 @@ struct sig
         }
     }
 
-    static void init()
+    static int init()
     {
         native_sigset    signal_set;
         native_sigaction signal_action;
@@ -183,6 +158,7 @@ struct sig
         /* mask signals */ {
             sig::procmask(SIG_BLOCK, signal_set);
         }
+        return 0;
     }
 
     static int wait()
@@ -212,102 +188,196 @@ struct sig
 }
 
 // ---------------------------------------------------------------------------
-// <anonymous>::thread_loop
+// <anonymous>::AutoJoin
 // ---------------------------------------------------------------------------
 
 namespace {
 
-void thread_loop(const Console* console, Application* application, int* return_value)
+class AutoJoin
 {
-    int& status(*return_value);
+public: // public interface
+    AutoJoin(std::thread& thread)
+        : _thread(thread)
+    {
+    }
 
-    if(application != nullptr) {
+   ~AutoJoin()
+    {
+        if(_thread.joinable()) {
+            _thread.join();
+        }
+    }
+
+private: // private data
+   std::thread& _thread;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// <anonymous>::Main
+// ---------------------------------------------------------------------------
+
+namespace {
+
+class Main
+{
+public: // public interface
+    Main(const ArgList& arglist, const Console& console)
+        : _siginit(sig::init())
+        , _arglist(arglist)
+        , _console(console)
+        , _application()
+        , _thread()
+        , _status(EXIT_SUCCESS)
+        , _shutdown(false)
+    {
+    }
+
+   ~Main()
+    {
+    }
+
+    int main()
+    {
+        const AutoJoin autojoin(_thread);
         try {
-            status = application->main();
+            createApplication();
+            launchApplication();
+            mainLoop();
         }
         catch(const std::exception& e) {
-            const char* const what(e.what());
-            console->errorStream << what << std::endl;
-            status = EXIT_FAILURE;
+            failure(e.what());
         }
         catch(...) {
-            const char* const what("an error has occured");
-            console->errorStream << what << std::endl;
-            status = EXIT_FAILURE;
+            failure("an error has occured");
         }
+        return _status;
     }
-    if(application != nullptr) {
-        application->stop();
+
+protected: // protected interface
+    void createApplication()
+    {
+        _application = std::make_unique<Application>(_arglist, _console);
     }
-    sig::kill();
-}
 
-}
+    void launchApplication()
+    {
+        std::thread(&Main::thrdLoop, this).swap(_thread);
+    }
 
-// ---------------------------------------------------------------------------
-// <anonymous>::loop
-// ---------------------------------------------------------------------------
-
-namespace {
-
-int loop(const ArgList& arglist, const Console& console)
-{
-    int status = EXIT_SUCCESS;
-
-    try {
-        sig::init();
-        std::unique_ptr<Application> app(new Application(arglist, console));
-        std::thread thread(&thread_loop, &console, app.get(), &status);
-        thr::autojoin thread_autojoin(thread);
-        /* main loop */ {
-            while(app->running()) {
+    void mainLoop()
+    {
+        try {
+            while(_shutdown == false) {
                 const int signum = sig::wait();
                 if(signum == -1) {
-                    app->onTimeout();
+                    _application->onTimeout();
                 }
                 else switch(signum) {
                     case sig::kSIGALRM:
-                        app->onSIGALRM();
+                        _application->onSIGALRM();
                         break;
                     case sig::kSIGUSR1:
-                        app->onSIGUSR1();
+                        _application->onSIGUSR1();
                         break;
                     case sig::kSIGUSR2:
-                        app->onSIGUSR2();
+                        _application->onSIGUSR2();
                         break;
                     case sig::kSIGPIPE:
-                        app->onSIGPIPE();
+                        _application->onSIGPIPE();
                         break;
                     case sig::kSIGCHLD:
-                        app->onSIGCHLD();
+                        _application->onSIGCHLD();
                         break;
                     case sig::kSIGTERM:
-                        app->onSIGTERM();
+                        _application->onSIGTERM();
                         break;
                     case sig::kSIGINTR:
-                        app->onSIGINTR();
+                        _application->onSIGINTR();
                         break;
                     case sig::kSIGHGUP:
-                        app->onSIGHGUP();
+                        _application->onSIGHGUP();
                         break;
                     default:
                         break;
                 }
             }
         }
+        catch(const std::exception& e) {
+            failure(e.what());
+        }
+        catch(...) {
+            failure("an error has occured");
+        }
     }
-    catch(const std::exception& e) {
-        const char* const what(e.what());
-        console.errorStream << what << std::endl;
-        status = EXIT_FAILURE;
+
+    void thrdLoop()
+    {
+        try {
+            const int status = _application->main();
+            if(status != EXIT_SUCCESS) {
+                _status = status;
+                failure();
+            }
+        }
+        catch(const std::exception& e) {
+            failure(e.what());
+        }
+        catch(...) {
+            failure("an error has occured");
+        }
+        shutdown();
     }
-    catch(...) {
-        const char* const what("an error has occured");
-        console.errorStream << what << std::endl;
-        status = EXIT_FAILURE;
+
+    void shutdown()
+    {
+        try {
+            if(_shutdown == false) {
+                _shutdown = true;
+                sig::kill();
+            }
+        }
+        catch(const std::exception& e) {
+            failure(e.what());
+        }
+        catch(...) {
+            failure("an error has occured");
+        }
     }
-    return status;
-}
+
+    void failure(const char* message = nullptr)
+    {
+
+        if(_status == EXIT_SUCCESS) {
+            _status = EXIT_FAILURE;
+        }
+        errorln(message);
+    }
+
+    void println(const char* message)
+    {
+        if((message != nullptr) && (_console.printStream.good())) {
+            _console.printStream << message << std::endl;
+        }
+    }
+
+    void errorln(const char* message)
+    {
+        if((message != nullptr) && (_console.errorStream.good())) {
+            _console.errorStream << message << std::endl;
+        }
+    }
+
+private: // private data
+    const int            _siginit;
+    const ArgList&       _arglist;
+    const Console&       _console;
+    ApplicationUniquePtr _application;
+    std::thread          _thread;
+    std::atomic_int      _status;
+    std::atomic_bool     _shutdown;
+};
 
 }
 
@@ -324,7 +394,7 @@ int main(int argc, char* argv[])
                           , std::cout
                           , std::cerr );
 
-    return loop(arglist, console);
+    return Main(arglist, console).main();
 }
 
 // ---------------------------------------------------------------------------

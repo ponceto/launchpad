@@ -17,12 +17,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
-#include <csignal>
 #include <memory>
 #include <string>
 #include <vector>
@@ -31,8 +29,10 @@
 #include "Program.h"
 
 // ---------------------------------------------------------------------------
-// Program
+// base::Program
 // ---------------------------------------------------------------------------
+
+namespace base {
 
 Program::Program ( const ArgList& arglist
                  , const Console& console )
@@ -88,6 +88,8 @@ void Program::onSIGINTR()
 
 void Program::onSIGHGUP()
 {
+}
+
 }
 
 // ---------------------------------------------------------------------------

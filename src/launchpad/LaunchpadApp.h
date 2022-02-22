@@ -27,6 +27,8 @@
 
 using Launchpad          = novation::Launchpad;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
+using ArgList            = base::ArgList;
+using Console            = base::Console;
 
 // ---------------------------------------------------------------------------
 // LaunchpadAppType
@@ -52,7 +54,7 @@ public: // public interface
     LaunchpadApp ( const ArgList& arglist
                  , const Console& console
                  , Launchpad&     launchpad
-                 , uint32_t       delay );
+                 , uint64_t       delay );
 
     virtual ~LaunchpadApp();
 
@@ -81,7 +83,7 @@ protected: // protected data
     const uint8_t  _red;
     const uint8_t  _green;
     const uint8_t  _yellow;
-    const uint32_t _delay;
+    const uint64_t _delay;
     bool           _terminate;
 };
 
@@ -113,7 +115,7 @@ public: // public interface
     LaunchpadCycleApp ( const ArgList& arglist
                       , const Console& console
                       , Launchpad&     launchpad
-                      , const uint32_t delay );
+                      , const uint64_t delay );
 
     virtual ~LaunchpadCycleApp();
 
@@ -132,7 +134,7 @@ public: // public interface
                       , const Console&     console
                       , Launchpad&         launchpad
                       , const std::string& string
-                      , const uint32_t     delay );
+                      , const uint64_t     delay );
 
     virtual ~LaunchpadPrintApp();
 
@@ -154,7 +156,7 @@ public: // public interface
                        , const Console&     console
                        , Launchpad&         launchpad
                        , const std::string& string
-                       , const uint32_t     delay );
+                       , const uint64_t     delay );
 
     virtual ~LaunchpadScrollApp();
 

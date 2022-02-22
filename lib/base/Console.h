@@ -21,12 +21,18 @@
 // some aliases
 // ---------------------------------------------------------------------------
 
+namespace base {
+
 using IStream = std::istream;
 using OStream = std::ostream;
 
+}
+
 // ---------------------------------------------------------------------------
-// Console
+// base::Console
 // ---------------------------------------------------------------------------
+
+namespace base {
 
 struct Console
 {
@@ -43,6 +49,8 @@ struct Console
     OStream& printStream;
     OStream& errorStream;
 };
+
+}
 
 // ---------------------------------------------------------------------------
 // End-Of-File

@@ -141,7 +141,7 @@ Usage: launchpad [OPTIONS]
     --print={text}              print a text
     --scroll={text}             scroll a text
 
-    --delay={value[ms|s|m]}     delay (ms by default)
+    --delay={value[us|ms|s|m]}  delay (ms by default)
 
     --midi={port}               MIDI input/output
     --midi-input={port}         MIDI input
