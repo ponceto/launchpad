@@ -6,7 +6,7 @@ This project is designed to experiment with the `Novation Launchpad Mini` [MIDI]
 
 This project is based on the excellent cross-platform [RtMidi](https://www.music.mcgill.ca/~gary/rtmidi/) library and is written in C++14 for Linux, but it should compile and run on BSD without any change.
 
-## Supprted models
+## Supported models
 
 The project has only been tested with the `Launchpad Mini MK2` but should work with the original `Launchpad` and `Launchpad Mini MK1`.
 
@@ -140,6 +140,7 @@ Usage: launchpad [OPTIONS]
     --cycle                     cycle colors
     --print={text}              print a text
     --scroll={text}             scroll a text
+    --game-of-life={pattern}    Conway's game of life
 
     --delay={value[us|ms|s|m]}  delay (ms by default)
 
@@ -224,3 +225,15 @@ You can scroll a text with this command:
 launchpad --scroll={text} [--delay={value[ms|s|m]}]
 ```
 
+### GameOfLife application
+
+You can run a Conway's Game of Life with this command:
+
+```
+launchpad --game-of-life={pattern} [--delay={value[ms|s|m]}]
+```
+
+The pattern value can be:
+
+  - `random` for a random pattern
+  - `slider` for a slider pattern
