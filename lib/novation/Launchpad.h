@@ -50,9 +50,9 @@ public: // public interface
 
     virtual void setPad(uint8_t pad, uint8_t color);
 
-    virtual void enumerateInputs(std::vector<std::string>& inputs);
+    virtual int enumerateInputs(std::vector<std::string>& inputs);
 
-    virtual void enumerateOutputs(std::vector<std::string>& outputs);
+    virtual int enumerateOutputs(std::vector<std::string>& outputs);
 
     enum Layout {
         GRID_LAYOUT = 0x01,

@@ -137,7 +137,7 @@ struct lp
     {
         const char*  data = string.c_str();
         const size_t size = string.size();
-        const int    pixs = 8 * (size > 0 ? size - 1 : 0);
+        const int    pixs = COLS * (size > 0 ? size - 1 : 0);
 
         for(uint8_t pix = 0; pix < pixs; ++pix) {
             if(shutdown != false) {
@@ -162,197 +162,6 @@ struct lp
             lp::sleep(launchpad, delay);
         }
     }
-
-    static void list_inputs(Launchpad& launchpad, std::ostream& stream)
-    {
-        std::vector<std::string> ports;
-        launchpad.enumerateInputs(ports);
-        stream << "Available MIDI inputs :" << std::endl;
-        stream << std::endl;
-        for(const std::string& port : ports) {
-            stream << "[I]" << ' ' << port << std::endl;
-        }
-        stream << std::endl;
-    }
-
-    static void list_outputs(Launchpad& launchpad, std::ostream& stream)
-    {
-        std::vector<std::string> ports;
-        launchpad.enumerateOutputs(ports);
-        stream << "Available MIDI outputs :" << std::endl;
-        stream << std::endl;
-        for(const std::string& port : ports) {
-            stream << "[O]" << ' ' << port << std::endl;
-        }
-        stream << std::endl;
-    }
-};
-
-}
-
-// ---------------------------------------------------------------------------
-// <anonymous>::GameOfLife
-// ---------------------------------------------------------------------------
-
-namespace {
-
-class GameOfLife
-{
-public: // public interface
-    GameOfLife(Launchpad& launchpad)
-        : _launchpad(launchpad)
-        , _none(lp::color(0, 0))
-        , _dead(lp::color(255, 0))
-        , _fate(lp::color(255, 255))
-        , _live(lp::color(0, 255))
-        , _world()
-        , _state()
-    {
-        lp::reset(_launchpad);
-    }
-
-   ~GameOfLife()
-    {
-        lp::clear(_launchpad, _none);
-    }
-
-    void run(const std::string& type, const uint64_t delay, const bool& shutdown)
-    {
-        if(type == "glider") {
-            init_glider(1, 1);
-        }
-        else {
-            init_random();
-        }
-        while(shutdown == false) {
-            show();
-            copy();
-            next();
-            lp::sleep(_launchpad, delay);
-        }
-    }
-
-private: // private interface
-    void set(const uint8_t row, const uint8_t col, const uint8_t state)
-    {
-        if((row < ROWS) && (col < COLS)) {
-            _world[row][col] = state;
-        }
-    }
-
-    uint8_t get(const uint8_t row, const uint8_t col)
-    {
-        if((row < ROWS) && (col < COLS)) {
-            return _state[row][col];
-        }
-        return _none;
-    }
-
-    uint8_t count(const uint8_t row, const uint8_t col)
-    {
-        uint8_t count = 0;
-
-        if(get(row - 1, col - 1) == _live) ++count;
-        if(get(row - 1, col    ) == _live) ++count;
-        if(get(row - 1, col + 1) == _live) ++count;
-
-        if(get(row    , col - 1) == _live) ++count;
-        if(get(row    , col + 1) == _live) ++count;
-
-        if(get(row + 1, col - 1) == _live) ++count;
-        if(get(row + 1, col    ) == _live) ++count;
-        if(get(row + 1, col + 1) == _live) ++count;
-
-        return count;
-    }
-
-    void init_random()
-    {
-        std::random_device entropy;
-        std::mt19937 generator(entropy());
-        std::uniform_int_distribution<uint8_t> distribute(0, 1);
-
-        for(uint8_t row = 0; row < ROWS; ++row) {
-            for(uint8_t col = 0; col < COLS; ++col) {
-                set(row, col, (distribute(generator) != 0 ? _live : _none));
-            }
-        }
-    }
-
-    void init_glider(const uint8_t row, const uint8_t col)
-    {
-        set((row - 1), (col - 1), _none);
-        set((row - 1), (col    ), _live);
-        set((row - 1), (col + 1), _none);
-        set((row    ), (col - 1), _none);
-        set((row    ), (col    ), _none);
-        set((row    ), (col + 1), _live);
-        set((row + 1), (col - 1), _live);
-        set((row + 1), (col    ), _live);
-        set((row + 1), (col + 1), _live);
-    }
-
-    void copy()
-    {
-        for(uint8_t row = 0; row < ROWS; ++row) {
-            for(uint8_t col = 0; col < COLS; ++col) {
-                _state[row][col] = _world[row][col];
-            }
-        }
-    }
-
-    void next()
-    {
-        for(uint8_t row = 0; row < ROWS; ++row) {
-            for(uint8_t col = 0; col < COLS; ++col) {
-                uint8_t& cell = _world[row][col];
-                const uint8_t neighbors = count(row, col);
-                if(cell == _live) {
-                    if((neighbors <= 1) || (neighbors >= 4)) {
-                        cell = _fate;
-                    }
-                }
-                else if(neighbors == 3) {
-                    cell = _live;
-                }
-                else if(cell == _fate) {
-                    cell = _dead;
-                }
-                else if(cell == _dead) {
-                    cell = _none;
-                }
-                else {
-                    cell = _none;
-                }
-            }
-        }
-    }
-
-    void show()
-    {
-        _launchpad.setBuffer(0, 1, false, false);
-        for(uint8_t row = 0; row < ROWS; ++row) {
-            for(uint8_t col = 0; col < COLS; ++col) {
-                const uint8_t& cell = _world[row][col];
-                lp::set(_launchpad, row, col, cell);
-            }
-        }
-        _launchpad.setBuffer(1, 0, false, true );
-        _launchpad.setBuffer(0, 0, false, false);
-    }
-
-private: // private static data
-    static constexpr uint8_t ROWS = 8;
-    static constexpr uint8_t COLS = 8;
-
-private: // private data
-    Launchpad&    _launchpad;
-    const uint8_t _none;
-    const uint8_t _dead;
-    const uint8_t _fate;
-    const uint8_t _live;
-    uint8_t       _world[ROWS][COLS];
-    uint8_t       _state[ROWS][COLS];
 };
 
 }
@@ -361,18 +170,18 @@ private: // private data
 // LaunchpadApp
 // ---------------------------------------------------------------------------
 
-LaunchpadApp::LaunchpadApp ( const ArgList& arglist
-                           , const Console& console
-                           , Launchpad&     launchpad
-                           , uint64_t       delay )
-    : _arglist(arglist)
-    , _console(console)
+LaunchpadApp::LaunchpadApp ( const Console&     console
+                           , Launchpad&         launchpad
+                           , const std::string& param
+                           , const uint64_t     delay )
+    : _console(console)
     , _launchpad(launchpad)
+    , _param(param)
     , _delay(delay)
     , _black(lp::color(0, 0))
     , _red(lp::color(255, 0))
     , _green(lp::color(0, 255))
-    , _yellow(lp::color(255, 255))
+    , _amber(lp::color(255, 255))
     , _shutdown(false)
 {
 }
@@ -381,121 +190,436 @@ LaunchpadApp::~LaunchpadApp()
 {
 }
 
+void LaunchpadApp::println(const std::string& message)
+{
+    if(_console.printStream.good()) {
+        _console.printStream << message << std::endl;
+    }
+}
+
+void LaunchpadApp::println(const std::string& prefix, const std::string& message)
+{
+    if(_console.printStream.good()) {
+        _console.printStream << prefix << ' ' << message << std::endl;
+    }
+}
+
+void LaunchpadApp::errorln(const std::string& message)
+{
+    if(_console.errorStream.good()) {
+        _console.errorStream << message << std::endl;
+    }
+}
+
+void LaunchpadApp::errorln(const std::string& prefix, const std::string& message)
+{
+    if(_console.errorStream.good()) {
+        _console.errorStream << prefix << ' ' << message << std::endl;
+    }
+}
+
+void LaunchpadApp::sleep(const uint64_t delay)
+{
+    std::this_thread::sleep_for(std::chrono::microseconds(delay));
+}
+
 // ---------------------------------------------------------------------------
-// LaunchpadListApp
+// HelpApp
 // ---------------------------------------------------------------------------
 
-LaunchpadListApp::LaunchpadListApp ( const ArgList& arglist
-                                   , const Console& console
-                                   , Launchpad&     launchpad )
-    : LaunchpadApp(arglist, console, launchpad, 0)
+namespace launchpad {
+
+HelpApp::HelpApp ( const Console&     console
+                 , Launchpad&         launchpad
+                 , const std::string& param
+                 , const uint64_t     delay
+                 , const std::string& program
+                 , const std::string& midiIn
+                 , const std::string& midiOut )
+    : LaunchpadApp(console, launchpad, param, delay)
+    , _program(program)
+    , _midiIn(midiIn)
+    , _midiOut(midiOut)
 {
 }
 
-LaunchpadListApp::~LaunchpadListApp()
+HelpApp::~HelpApp()
 {
 }
 
-void LaunchpadListApp::main()
+void HelpApp::main()
 {
-    lp::list_inputs(_launchpad, _console.printStream);
-    lp::list_outputs(_launchpad, _console.printStream);
+    std::ostream& printStream(_console.printStream);
+
+    if(printStream.good()) {
+        printStream << "Usage: " << _program << ' ' << "[OPTIONS]"                 << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "    -h, --help                  display this help"         << std::endl;
+        printStream << "    -l, --list                  list available MIDI ports" << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "    --cycle                     cycle colors"              << std::endl;
+        printStream << "    --print={text}              print a text"              << std::endl;
+        printStream << "    --scroll={text}             scroll a text"             << std::endl;
+        printStream << "    --game-of-life={pattern}    Conway's game of life"     << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "    --delay={value[us|ms|s|m]}  delay (ms by default)"     << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "    --midi={port}               MIDI input/output"         << std::endl;
+        printStream << "    --midi-input={port}         MIDI input"                << std::endl;
+        printStream << "    --midi-output={port}        MIDI output"               << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "MIDI input:"                                               << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "  - " << _midiIn                                           << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "MIDI output:"                                              << std::endl;
+        printStream << ""                                                          << std::endl;
+        printStream << "  - " << _midiOut                                          << std::endl;
+        printStream << ""                                                          << std::endl;
+    }
+}
+
 }
 
 // ---------------------------------------------------------------------------
-// LaunchpadCycleApp
+// ListApp
 // ---------------------------------------------------------------------------
 
-LaunchpadCycleApp::LaunchpadCycleApp ( const ArgList& arglist
-                                     , const Console& console
-                                     , Launchpad&     launchpad
-                                     , const uint64_t delay )
-    : LaunchpadApp(arglist, console, launchpad, delay)
+namespace launchpad {
+
+ListApp::ListApp ( const Console&     console
+                 , Launchpad&         launchpad
+                 , const std::string& param
+                 , const uint64_t     delay )
+    : LaunchpadApp(console, launchpad, param, delay)
 {
 }
 
-LaunchpadCycleApp::~LaunchpadCycleApp()
+ListApp::~ListApp()
 {
 }
 
-void LaunchpadCycleApp::main()
+void ListApp::main()
+{
+    listInputs();
+    listOutputs();
+}
+
+void ListApp::listInputs()
+{
+    std::vector<std::string> ports;
+
+    println("Available MIDI inputs :");
+    println();
+    if(_launchpad.enumerateInputs(ports) > 0) {
+        for(const std::string& port : ports) {
+            println("[I]", port);
+        }
+    }
+    println();
+}
+
+void ListApp::listOutputs()
+{
+    std::vector<std::string> ports;
+
+    println("Available MIDI outputs :");
+    println();
+    if(_launchpad.enumerateOutputs(ports) > 0) {
+        for(const std::string& port : ports) {
+            println("[O]", port);
+        }
+    }
+    println();
+}
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::CycleApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+CycleApp::CycleApp ( const Console&     console
+                   , Launchpad&         launchpad
+                   , const std::string& param
+                   , const uint64_t     delay )
+    : LaunchpadApp(console, launchpad, param, delay)
 {
     lp::reset(_launchpad);
+}
+
+CycleApp::~CycleApp()
+{
+    lp::clear(_launchpad, _black);
+}
+
+void CycleApp::main()
+{
     lp::cycle(_launchpad, _delay, _shutdown);
-    lp::clear(_launchpad, _black);
+}
+
 }
 
 // ---------------------------------------------------------------------------
-// LaunchpadPrintApp
+// launchpad::PrintApp
 // ---------------------------------------------------------------------------
 
-LaunchpadPrintApp::LaunchpadPrintApp ( const ArgList&     arglist
-                                     , const Console&     console
-                                     , Launchpad&         launchpad
-                                     , const std::string& string
-                                     , const uint64_t     delay )
-    : LaunchpadApp(arglist, console, launchpad, delay)
-    , _string(string)
-{
-}
+namespace launchpad {
 
-LaunchpadPrintApp::~LaunchpadPrintApp()
-{
-}
-
-void LaunchpadPrintApp::main()
+PrintApp::PrintApp ( const Console&     console
+                   , Launchpad&         launchpad
+                   , const std::string& param
+                   , const uint64_t     delay )
+    : LaunchpadApp(console, launchpad, param, delay)
 {
     lp::reset(_launchpad);
-    lp::print(_launchpad, _string, _red, _black, _delay, _shutdown);
+}
+
+PrintApp::~PrintApp()
+{
     lp::clear(_launchpad, _black);
 }
 
-// ---------------------------------------------------------------------------
-// LaunchpadScrollApp
-// ---------------------------------------------------------------------------
-
-LaunchpadScrollApp::LaunchpadScrollApp ( const ArgList&     arglist
-                                       , const Console&     console
-                                       , Launchpad&         launchpad
-                                       , const std::string& string
-                                       , const uint64_t     delay )
-    : LaunchpadApp(arglist, console, launchpad, delay)
-    , _string(string)
+void PrintApp::main()
 {
+    lp::print(_launchpad, _param, _red, _black, _delay, _shutdown);
 }
 
-LaunchpadScrollApp::~LaunchpadScrollApp()
-{
 }
 
-void LaunchpadScrollApp::main()
+// ---------------------------------------------------------------------------
+// launchpad::ScrollApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+ScrollApp::ScrollApp ( const Console&     console
+                     , Launchpad&         launchpad
+                     , const std::string& param
+                     , const uint64_t     delay )
+    : LaunchpadApp(console, launchpad, param, delay)
 {
     lp::reset(_launchpad);
-    lp::scroll(_launchpad, _string, _red, _black, _delay, _shutdown);
+}
+
+ScrollApp::~ScrollApp()
+{
     lp::clear(_launchpad, _black);
 }
 
-// ---------------------------------------------------------------------------
-// LaunchpadGameOfLifeApp
-// ---------------------------------------------------------------------------
-
-LaunchpadGameOfLifeApp::LaunchpadGameOfLifeApp ( const ArgList&     arglist
-                                               , const Console&     console
-                                               , Launchpad&         launchpad
-                                               , const std::string& string
-                                               , const uint64_t     delay )
-    : LaunchpadApp(arglist, console, launchpad, delay)
-    , _string(string)
+void ScrollApp::main()
 {
+    lp::scroll(_launchpad, _param, _red, _black, _delay, _shutdown);
 }
 
-LaunchpadGameOfLifeApp::~LaunchpadGameOfLifeApp()
-{
 }
 
-void LaunchpadGameOfLifeApp::main()
+// ---------------------------------------------------------------------------
+// launchpad::GameOfLifeApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+GameOfLifeApp::GameOfLifeApp ( const Console&     console
+                             , Launchpad&         launchpad
+                             , const std::string& param
+                             , const uint64_t     delay )
+    : LaunchpadApp(console, launchpad, param, delay)
+    , _color0(lp::color(0, 0))
+    , _color1(lp::color(128, 0))
+    , _color2(lp::color(255, 0))
+    , _color3(lp::color(255, 255))
+    , _color4(lp::color(0, 255))
+    , _world()
+    , _cache()
 {
-    GameOfLife(_launchpad).run(_string, _delay, _shutdown);
+    lp::reset(_launchpad);
+}
+
+GameOfLifeApp::~GameOfLifeApp()
+{
+    lp::clear(_launchpad, _black);
+}
+
+void GameOfLifeApp::main()
+{
+    if(_shutdown == false) {
+        init();
+        do {
+            loop();
+        } while(_shutdown == false);
+    }
+}
+
+void GameOfLifeApp::init()
+{
+    auto set = [&](const uint8_t row, const uint8_t col, const Cell state) -> void
+    {
+        _world.data[row % ROWS][col % COLS] = state;
+    };
+
+    auto init_random = [&]() -> void
+    {
+        std::random_device entropy;
+        std::mt19937 generator(entropy());
+        std::uniform_int_distribution<uint8_t> distribute(0, 1);
+
+        for(uint8_t row = 0; row < ROWS; ++row) {
+            for(uint8_t col = 0; col < COLS; ++col) {
+                const uint8_t value = distribute(generator);
+                set(row, col, (value != 0 ? Cell::kLIVE : Cell::kNONE));
+            }
+        }
+    };
+
+    auto init_glider = [&](const uint8_t row, const uint8_t col) -> void
+    {
+        set((row - 1), (col - 1), Cell::kNONE);
+        set((row - 1), (col | 0), Cell::kLIVE);
+        set((row - 1), (col + 1), Cell::kNONE);
+        set((row | 0), (col - 1), Cell::kNONE);
+        set((row | 0), (col | 0), Cell::kNONE);
+        set((row | 0), (col + 1), Cell::kLIVE);
+        set((row + 1), (col - 1), Cell::kLIVE);
+        set((row + 1), (col | 0), Cell::kLIVE);
+        set((row + 1), (col + 1), Cell::kLIVE);
+    };
+
+    if(_param.empty()) {
+        init_random();
+    }
+    else if(_param == "random") {
+        init_random();
+    }
+    else if(_param == "glider") {
+        init_glider(1, 1);
+    }
+    else {
+        throw std::runtime_error("invalid pattern");
+    }
+}
+
+void GameOfLifeApp::loop()
+{
+    bool stable = true;
+
+    auto stateOrDeath = [&](const Cell cell, const uint8_t neighbors) -> Cell
+    {
+        if((neighbors <= 1) || (neighbors >= 4)) {
+            return Cell::kKILL;
+        }
+        return cell;
+    };
+
+    auto stateOrBirth = [&](const Cell cell, const uint8_t neighbors) -> Cell
+    {
+        if(neighbors == 3) {
+            return Cell::kLIVE;
+        }
+        return cell;
+    };
+
+    auto mutate = [&](const Cell cell, const uint8_t neighbors) -> Cell
+    {
+        switch(cell) {
+            case Cell::kLIVE:
+                return stateOrDeath(Cell::kLIVE, neighbors);
+            case Cell::kKILL:
+                return stateOrBirth(Cell::kDEAD, neighbors);
+            case Cell::kDEAD:
+                return stateOrBirth(Cell::kHIDE, neighbors);
+            case Cell::kHIDE:
+                return stateOrBirth(Cell::kNONE, neighbors);
+            case Cell::kNONE:
+                return stateOrBirth(Cell::kNONE, neighbors);
+            default:
+                break;
+        }
+        return cell;
+    };
+
+    auto neighbors = [&](const uint8_t row, const uint8_t col) -> uint8_t
+    {
+        uint8_t count = 0;
+
+        if(_cache.get((row - 1), (col - 1)) == Cell::kLIVE) ++count;
+        if(_cache.get((row - 1), (col | 0)) == Cell::kLIVE) ++count;
+        if(_cache.get((row - 1), (col + 1)) == Cell::kLIVE) ++count;
+        if(_cache.get((row | 0), (col - 1)) == Cell::kLIVE) ++count;
+        if(_cache.get((row | 0), (col + 1)) == Cell::kLIVE) ++count;
+        if(_cache.get((row + 1), (col - 1)) == Cell::kLIVE) ++count;
+        if(_cache.get((row + 1), (col | 0)) == Cell::kLIVE) ++count;
+        if(_cache.get((row + 1), (col + 1)) == Cell::kLIVE) ++count;
+
+        return count;
+    };
+
+    auto color = [&](const Cell cell) -> uint8_t
+    {
+        switch(cell) {
+            case Cell::kNONE:
+                return _color0;
+            case Cell::kHIDE:
+                return _color1;
+            case Cell::kDEAD:
+                return _color2;
+            case Cell::kKILL:
+                return _color3;
+            case Cell::kLIVE:
+                return _color4;
+            default:
+                break;
+        }
+        return _black;
+    };
+
+    auto display = [&]() -> void
+    {
+        for(uint8_t row = 0; row < ROWS; ++row) {
+            for(uint8_t col = 0; col < COLS; ++col) {
+                const Cell& cell(_world.get(row, col));
+                lp::set(_launchpad, row, col, color(cell));
+            }
+        }
+    };
+
+    auto prepare = [&]() -> void
+    {
+        _cache = _world;
+    };
+
+    auto process = [&]() -> void
+    {
+        for(uint8_t row = 0; row < ROWS; ++row) {
+            for(uint8_t col = 0; col < COLS; ++col) {
+                const Cell& prev(_cache.get(row, col));
+                Cell&       cell(_world.get(row, col));
+                cell = mutate(prev, neighbors(row, col));
+                if(cell != prev) {
+                    stable = false;
+                }
+            }
+        }
+    };
+
+    auto finalize = [&]() -> void
+    {
+        if(stable != false) {
+            init();
+        }
+        if(_shutdown == false) {
+            sleep(_delay);
+        }
+    };
+
+    display();
+    prepare();
+    process();
+    finalize();
+}
+
 }
 
 // ---------------------------------------------------------------------------

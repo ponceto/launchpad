@@ -55,14 +55,15 @@ public: // public interface
     virtual void onSIGHGUP() override;
 
 protected: // protected interface
-    virtual int loop();
-    virtual int help();
+    virtual bool init();
+    virtual bool loop();
 
 protected: // protected data
     std::string           _lpName;
+    std::string           _lpProgram;
     std::string           _lpInput;
     std::string           _lpOutput;
-    std::string           _lpString;
+    std::string           _lpParam;
     std::string           _lpDelay;
     LaunchpadAppType      _lpAppType;
     LaunchpadUniquePtr    _lpLaunchpad;

@@ -154,14 +154,18 @@ void Launchpad::setPad(uint8_t pad, uint8_t color)
     Midi::send(*(_midi.out), channel, note, velocity);
 }
 
-void Launchpad::enumerateInputs(std::vector<std::string>& inputs)
+int Launchpad::enumerateInputs(std::vector<std::string>& inputs)
 {
     Midi::enumerate(*(_midi.in), inputs);
+
+    return inputs.size();
 }
 
-void Launchpad::enumerateOutputs(std::vector<std::string>& outputs)
+int Launchpad::enumerateOutputs(std::vector<std::string>& outputs)
 {
     Midi::enumerate(*(_midi.out), outputs);
+
+    return outputs.size();
 }
 
 }

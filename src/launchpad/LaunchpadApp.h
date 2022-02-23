@@ -17,7 +17,6 @@
 #ifndef __LaunchpadApp_h__
 #define __LaunchpadApp_h__
 
-#include <base/ArgList.h>
 #include <base/Console.h>
 #include <novation/Launchpad.h>
 
@@ -25,10 +24,9 @@
 // some aliases
 // ---------------------------------------------------------------------------
 
+using Console            = base::Console;
 using Launchpad          = novation::Launchpad;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
-using ArgList            = base::ArgList;
-using Console            = base::Console;
 
 // ---------------------------------------------------------------------------
 // LaunchpadAppType
@@ -52,10 +50,10 @@ enum class LaunchpadAppType
 class LaunchpadApp
 {
 public: // public interface
-    LaunchpadApp ( const ArgList& arglist
-                 , const Console& console
-                 , Launchpad&     launchpad
-                 , uint64_t       delay );
+    LaunchpadApp ( const Console&     console
+                 , Launchpad&         launchpad
+                 , const std::string& param
+                 , const uint64_t     delay );
 
     virtual ~LaunchpadApp();
 
@@ -66,117 +64,27 @@ public: // public interface
         _shutdown = true;
     }
 
+protected: // protected interface
+    void println(const std::string& message = std::string());
+
+    void println(const std::string& prefix, const std::string& message);
+
+    void errorln(const std::string& message = std::string());
+
+    void errorln(const std::string& prefix, const std::string& message);
+
+    void sleep(const uint64_t delay);
+
 protected: // protected data
-    const ArgList& _arglist;
-    const Console& _console;
-    Launchpad&     _launchpad;
-    const uint64_t _delay;
-    const uint8_t  _black;
-    const uint8_t  _red;
-    const uint8_t  _green;
-    const uint8_t  _yellow;
-    bool           _shutdown;
-};
-
-// ---------------------------------------------------------------------------
-// LaunchpadListApp
-// ---------------------------------------------------------------------------
-
-class LaunchpadListApp
-    : public LaunchpadApp
-{
-public: // public interface
-    LaunchpadListApp ( const ArgList& arglist
-                     , const Console& console
-                     , Launchpad&     launchpad );
-
-    virtual ~LaunchpadListApp();
-
-    virtual void main();
-};
-
-// ---------------------------------------------------------------------------
-// LaunchpadCycleApp
-// ---------------------------------------------------------------------------
-
-class LaunchpadCycleApp
-    : public LaunchpadApp
-{
-public: // public interface
-    LaunchpadCycleApp ( const ArgList& arglist
-                      , const Console& console
-                      , Launchpad&     launchpad
-                      , const uint64_t delay );
-
-    virtual ~LaunchpadCycleApp();
-
-    virtual void main();
-};
-
-// ---------------------------------------------------------------------------
-// LaunchpadPrintApp
-// ---------------------------------------------------------------------------
-
-class LaunchpadPrintApp
-    : public LaunchpadApp
-{
-public: // public interface
-    LaunchpadPrintApp ( const ArgList&     arglist
-                      , const Console&     console
-                      , Launchpad&         launchpad
-                      , const std::string& string
-                      , const uint64_t     delay );
-
-    virtual ~LaunchpadPrintApp();
-
-    virtual void main();
-
-private: // private data
-    const std::string _string;
-};
-
-// ---------------------------------------------------------------------------
-// LaunchpadScrollApp
-// ---------------------------------------------------------------------------
-
-class LaunchpadScrollApp
-    : public LaunchpadApp
-{
-public: // public interface
-    LaunchpadScrollApp ( const ArgList&     arglist
-                       , const Console&     console
-                       , Launchpad&         launchpad
-                       , const std::string& string
-                       , const uint64_t     delay );
-
-    virtual ~LaunchpadScrollApp();
-
-    virtual void main();
-
-private: // private data
-    const std::string _string;
-};
-
-// ---------------------------------------------------------------------------
-// LaunchpadGameOfLifeApp
-// ---------------------------------------------------------------------------
-
-class LaunchpadGameOfLifeApp
-    : public LaunchpadApp
-{
-public: // public interface
-    LaunchpadGameOfLifeApp ( const ArgList&     arglist
-                           , const Console&     console
-                           , Launchpad&         launchpad
-                           , const std::string& string
-                           , const uint64_t     delay );
-
-    virtual ~LaunchpadGameOfLifeApp();
-
-    virtual void main();
-
-private: // private data
-    const std::string _string;
+    const Console&    _console;
+    Launchpad&        _launchpad;
+    const std::string _param;
+    const uint64_t    _delay;
+    const uint8_t     _black;
+    const uint8_t     _red;
+    const uint8_t     _green;
+    const uint8_t     _amber;
+    bool              _shutdown;
 };
 
 // ---------------------------------------------------------------------------
@@ -184,6 +92,190 @@ private: // private data
 // ---------------------------------------------------------------------------
 
 using LaunchpadAppUniquePtr = std::unique_ptr<LaunchpadApp>;
+
+// ---------------------------------------------------------------------------
+// launchpad::HelpApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class HelpApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    HelpApp ( const Console&     console
+            , Launchpad&         launchpad
+            , const std::string& param
+            , const uint64_t     delay
+            , const std::string& program
+            , const std::string& midiIn
+            , const std::string& midiOut );
+
+    virtual ~HelpApp();
+
+    virtual void main() override;
+
+private: // private data
+    const std::string _program;
+    const std::string _midiIn;
+    const std::string _midiOut;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::ListApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class ListApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    ListApp ( const Console&     console
+            , Launchpad&         launchpad
+            , const std::string& param
+            , const uint64_t     delay );
+
+    virtual ~ListApp();
+
+    virtual void main() override;
+
+protected: // protected interface
+    virtual void listInputs();
+    virtual void listOutputs();
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::CycleApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class CycleApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    CycleApp ( const Console&     console
+             , Launchpad&         launchpad
+             , const std::string& param
+             , const uint64_t     delay );
+
+    virtual ~CycleApp();
+
+    virtual void main() override;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::PrintApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class PrintApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    PrintApp ( const Console&     console
+             , Launchpad&         launchpad
+             , const std::string& param
+             , const uint64_t     delay );
+
+    virtual ~PrintApp();
+
+    virtual void main() override;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::ScrollApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class ScrollApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    ScrollApp ( const Console&     console
+              , Launchpad&         launchpad
+              , const std::string& param
+              , const uint64_t     delay );
+
+    virtual ~ScrollApp();
+
+    virtual void main() override;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::GameOfLifeApp
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class GameOfLifeApp final
+    : public LaunchpadApp
+{
+public: // public interface
+    GameOfLifeApp ( const Console&     console
+                  , Launchpad&         launchpad
+                  , const std::string& param
+                  , const uint64_t     delay );
+
+    virtual ~GameOfLifeApp();
+
+    virtual void main() override;
+
+private: // private interface
+    static constexpr uint8_t ROWS = 8;
+    static constexpr uint8_t COLS = 8;
+
+    enum class Cell : uint8_t
+    {
+        kNONE = 0,
+        kHIDE = 1,
+        kDEAD = 2,
+        kKILL = 3,
+        kLIVE = 4,
+    };
+
+    struct State
+    {
+        Cell data[ROWS][COLS];
+
+        Cell& get(const uint8_t row, const uint8_t col)
+        {
+            return data[row % ROWS][col % COLS];
+        }
+
+        const Cell& get(const uint8_t row, const uint8_t col) const
+        {
+            return data[row % ROWS][col % COLS];
+        }
+    };
+
+    void init();
+    void loop();
+
+private: // private data
+    const uint8_t _color0;
+    const uint8_t _color1;
+    const uint8_t _color2;
+    const uint8_t _color3;
+    const uint8_t _color4;
+    State         _world;
+    State         _cache;
+};
+
+}
 
 // ---------------------------------------------------------------------------
 // End-Of-File

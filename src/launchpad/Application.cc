@@ -151,9 +151,10 @@ Application::Application ( const ArgList& arglist
                          , const Console& console )
      : Program(arglist, console)
      , _lpName("Launchpad Mini")
+     , _lpProgram("launchpad")
      , _lpInput(_lpName)
      , _lpOutput(_lpName)
-     , _lpString(" Hello World ")
+     , _lpParam()
      , _lpDelay()
      , _lpAppType(LaunchpadAppType::kNONE)
      , _lpLaunchpad()
@@ -167,28 +168,41 @@ Application::~Application()
 
 int Application::main()
 {
+    if(init() == false) {
+        return EXIT_FAILURE;
+    }
+    if(loop() == false) {
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+bool Application::init()
+{
     /* parse command-line */ {
         int index = 0;
         for(auto& argument : _arglist) {
             const std::string argval(arg::value(argument));
             if(index++ == 0) {
-                continue;
+                _lpProgram = arg::basename(argument);
             }
             else if(arg::is(argument, "-h") || arg::is(argument, "--help")) {
                 if(_lpAppType != LaunchpadAppType::kHELP) {
                     _lpAppType = LaunchpadAppType::kHELP;
+                    _lpParam   = argval;
                 }
             }
             else if(arg::is(argument, "-l") || arg::is(argument, "--list")) {
                 if(_lpAppType != LaunchpadAppType::kHELP) {
                     _lpAppType = LaunchpadAppType::kLIST;
+                    _lpParam   = argval;
                 }
             }
             else if(arg::is(argument, "--cycle")) {
                 if(_lpAppType == LaunchpadAppType::kNONE) {
                     _lpAppType = LaunchpadAppType::kCYCLE;
                     if(argval.size() != 0) {
-                        _lpString = argval;
+                        _lpParam = argval;
                     }
                     if(_lpDelay.empty()) {
                         _lpDelay = "500ms";
@@ -199,7 +213,10 @@ int Application::main()
                 if(_lpAppType == LaunchpadAppType::kNONE) {
                     _lpAppType = LaunchpadAppType::kPRINT;
                     if(argval.size() != 0) {
-                        _lpString = argval;
+                        _lpParam = argval;
+                    }
+                    if(_lpParam.empty()) {
+                        _lpParam = " Hello World ";
                     }
                     if(_lpDelay.empty()) {
                         _lpDelay = "250ms";
@@ -210,7 +227,10 @@ int Application::main()
                 if(_lpAppType == LaunchpadAppType::kNONE) {
                     _lpAppType = LaunchpadAppType::kSCROLL;
                     if(argval.size() != 0) {
-                        _lpString = argval;
+                        _lpParam = argval;
+                    }
+                    if(_lpParam.empty()) {
+                        _lpParam = " Hello World ";
                     }
                     if(_lpDelay.empty()) {
                         _lpDelay = "100ms";
@@ -221,10 +241,13 @@ int Application::main()
                 if(_lpAppType == LaunchpadAppType::kNONE) {
                     _lpAppType = LaunchpadAppType::kGAMEOFLIFE;
                     if(argval.size() != 0) {
-                        _lpString = argval;
+                        _lpParam = argval;
+                    }
+                    if(_lpParam.empty()) {
+                        _lpParam = "random";
                     }
                     if(_lpDelay.empty()) {
-                        _lpDelay = "500ms";
+                        _lpDelay = "750ms";
                     }
                 }
             }
@@ -246,87 +269,54 @@ int Application::main()
             }
         }
     }
-    return loop();
+    return true;
 }
 
-int Application::loop()
+bool Application::loop()
 {
     switch(_lpAppType) {
+        default:
         case LaunchpadAppType::kHELP:
+            {
+                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
+                _lpLaunchpadApp = std::make_unique<launchpad::HelpApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
+            }
             break;
         case LaunchpadAppType::kLIST:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
-                _lpLaunchpadApp = std::make_unique<LaunchpadListApp>(_arglist, _console, *_lpLaunchpad);
+                _lpLaunchpadApp = std::make_unique<launchpad::ListApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kCYCLE:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<LaunchpadCycleApp>(_arglist, _console, *_lpLaunchpad, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::CycleApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kPRINT:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<LaunchpadPrintApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::PrintApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kSCROLL:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<LaunchpadScrollApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::ScrollApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kGAMEOFLIFE:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<LaunchpadGameOfLifeApp>(_arglist, _console, *_lpLaunchpad, _lpString, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::GameOfLifeApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
             }
-            break;
-        default:
             break;
     }
     if(_lpLaunchpadApp) {
         _lpLaunchpadApp->main();
     }
-    else {
-        return help();
-    }
-    return EXIT_SUCCESS;
-}
-
-int Application::help()
-{
-    const std::string program(arg::basename(_arglist.at(0)));
-
-    if(_console.printStream.good()) {
-        _console.printStream << "Usage: " << program << ' ' << "[OPTIONS]"                  << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    -h, --help                  display this help"         << std::endl;
-        _console.printStream << "    -l, --list                  list available MIDI ports" << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    --cycle                     cycle colors"              << std::endl;
-        _console.printStream << "    --print={text}              print a text"              << std::endl;
-        _console.printStream << "    --scroll={text}             scroll a text"             << std::endl;
-        _console.printStream << "    --game-of-life={pattern}    Conway's game of life"     << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    --delay={value[us|ms|s|m]}  delay (ms by default)"     << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "    --midi={port}               MIDI input/output"         << std::endl;
-        _console.printStream << "    --midi-input={port}         MIDI input"                << std::endl;
-        _console.printStream << "    --midi-output={port}        MIDI output"               << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "MIDI input:"                                               << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "  - " << _lpInput                                          << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "MIDI output:"                                              << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-        _console.printStream << "  - " << _lpOutput                                         << std::endl;
-        _console.printStream << ""                                                          << std::endl;
-    }
-    return EXIT_SUCCESS;
+    return true;
 }
 
 void Application::stop()

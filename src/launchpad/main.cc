@@ -31,6 +31,7 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <future>
 #include "Application.h"
 
 // ---------------------------------------------------------------------------
@@ -229,6 +230,8 @@ public: // public interface
         , _console(console)
         , _application()
         , _thread()
+        , _promise()
+        , _future(_promise.get_future())
         , _status(EXIT_SUCCESS)
         , _shutdown(false)
     {
@@ -243,8 +246,9 @@ public: // public interface
         const AutoJoin autojoin(_thread);
         try {
             createApplication();
-            launchApplication();
+            thrdStart();
             mainLoop();
+            thrdEnd();
         }
         catch(const std::exception& e) {
             failure(e.what());
@@ -256,16 +260,6 @@ public: // public interface
     }
 
 protected: // protected interface
-    void createApplication()
-    {
-        _application = std::make_unique<Application>(_arglist, _console);
-    }
-
-    void launchApplication()
-    {
-        std::thread(&Main::thrdLoop, this).swap(_thread);
-    }
-
     void mainLoop()
     {
         try {
@@ -312,22 +306,38 @@ protected: // protected interface
         }
     }
 
+    void createApplication()
+    {
+        _application = std::make_unique<Application>(_arglist, _console);
+    }
+
+    void thrdStart()
+    {
+        std::thread(&Main::thrdLoop, this).swap(_thread);
+    }
+
     void thrdLoop()
     {
         try {
-            const int status = _application->main();
-            if(status != EXIT_SUCCESS) {
-                _status = status;
-                failure();
-            }
+            _promise.set_value(_application->main());
         }
         catch(const std::exception& e) {
-            failure(e.what());
+            _promise.set_value(EXIT_FAILURE);
+            errorln(e.what());
         }
         catch(...) {
-            failure("an error has occured");
+            _promise.set_value(EXIT_FAILURE);
+            errorln("an error has occured");
         }
         shutdown();
+    }
+
+    void thrdEnd()
+    {
+        const int status = _future.get();
+        if((status != EXIT_SUCCESS) && (_status == EXIT_SUCCESS)) {
+            _status = status;
+        }
     }
 
     void shutdown()
@@ -339,10 +349,10 @@ protected: // protected interface
             }
         }
         catch(const std::exception& e) {
-            failure(e.what());
+            errorln(e.what());
         }
         catch(...) {
-            failure("an error has occured");
+            errorln("an error has occured");
         }
     }
 
@@ -375,6 +385,8 @@ private: // private data
     const Console&       _console;
     ApplicationUniquePtr _application;
     std::thread          _thread;
+    std::promise<int>    _promise;
+    std::future<int>     _future;
     std::atomic_int      _status;
     std::atomic_bool     _shutdown;
 };
