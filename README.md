@@ -236,4 +236,4 @@ launchpad --game-of-life={pattern} [--delay={value[ms|s|m]}]
 The pattern value can be:
 
   - `random` for a random pattern
-  - `slider` for a slider pattern
+  - `glider` for a glider pattern
