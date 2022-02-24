@@ -213,7 +213,7 @@ Example:
 launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
 ```
 
-### Cycle application
+### Colors cycle
 
 You can cycle all colors with this command:
 
@@ -224,7 +224,7 @@ Display a color cycle on the launchpad
 
 ```
 
-### Print application
+### Print a message
 
 You can print a message with this command:
 
@@ -235,7 +235,7 @@ Print a message on the launchpad
 
 ```
 
-### Scroll application
+### Scroll a message
 
 You can scroll a message with this command:
 
@@ -246,9 +246,9 @@ Scroll a message on the launchpad
 
 ```
 
-### GameOfLife application
+### Game of Life
 
-You can run a Conway's Game of Life with this command:
+You can run the Conway [Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) with this command:
 
 ```
 Usage: launchpad [options] gameoflife {pattern}
