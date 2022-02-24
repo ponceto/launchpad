@@ -576,7 +576,7 @@ GameOfLifeApp::GameOfLifeApp ( const Console&     console
                              , const uint64_t     delay )
     : LaunchpadApp(console, launchpad, param1, param2, param3, param4, checkDelay(delay, DEFAULT_DELAY))
     , _color0(lp::color(0, 0))
-    , _color1(lp::color(128, 0))
+    , _color1(lp::color(64, 0))
     , _color2(lp::color(255, 0))
     , _color3(lp::color(255, 255))
     , _color4(lp::color(0, 255))
