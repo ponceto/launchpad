@@ -172,11 +172,17 @@ struct lp
 
 LaunchpadApp::LaunchpadApp ( const Console&     console
                            , Launchpad&         launchpad
-                           , const std::string& param
+                           , const std::string& param1
+                           , const std::string& param2
+                           , const std::string& param3
+                           , const std::string& param4
                            , const uint64_t     delay )
     : _console(console)
     , _launchpad(launchpad)
-    , _param(param)
+    , _param1(param1)
+    , _param2(param2)
+    , _param3(param3)
+    , _param4(param4)
     , _delay(delay)
     , _black(lp::color(0, 0))
     , _red(lp::color(255, 0))
@@ -231,12 +237,15 @@ namespace launchpad {
 
 HelpApp::HelpApp ( const Console&     console
                  , Launchpad&         launchpad
-                 , const std::string& param
+                 , const std::string& param1
+                 , const std::string& param2
+                 , const std::string& param3
+                 , const std::string& param4
                  , const uint64_t     delay
                  , const std::string& program
                  , const std::string& midiIn
                  , const std::string& midiOut )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, delay)
     , _program(program)
     , _midiIn(midiIn)
     , _midiOut(midiOut)
@@ -252,30 +261,33 @@ void HelpApp::main()
     std::ostream& printStream(_console.printStream);
 
     if(printStream.good()) {
-        printStream << "Usage: " << _program << ' ' << "[OPTIONS]"                 << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "    -h, --help                  display this help"         << std::endl;
-        printStream << "    -l, --list                  list available MIDI ports" << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "    --cycle                     cycle colors"              << std::endl;
-        printStream << "    --print={text}              print a text"              << std::endl;
-        printStream << "    --scroll={text}             scroll a text"             << std::endl;
-        printStream << "    --game-of-life={pattern}    Conway's game of life"     << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "    --delay={value[us|ms|s|m]}  delay (ms by default)"     << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "    --midi={port}               MIDI input/output"         << std::endl;
-        printStream << "    --midi-input={port}         MIDI input"                << std::endl;
-        printStream << "    --midi-output={port}        MIDI output"               << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "MIDI input:"                                               << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "  - " << _midiIn                                           << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "MIDI output:"                                              << std::endl;
-        printStream << ""                                                          << std::endl;
-        printStream << "  - " << _midiOut                                          << std::endl;
-        printStream << ""                                                          << std::endl;
+        printStream << "Usage: " << _program << ' ' << "[options] <command> [<args>]"         << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "Commands:"                                                            << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "    help                                display help"                 << std::endl;
+        printStream << "    list                                list available MIDI ports"    << std::endl;
+        printStream << "    cycle                               cycle colors"                 << std::endl;
+        printStream << "    print {text}                        print a text"                 << std::endl;
+        printStream << "    scroll {text}                       scroll a text"                << std::endl;
+        printStream << "    gameoflife [{pattern}]              play the Conway game of life" << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "Options:"                                                             << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "    -h, --help                          display this help"            << std::endl;
+        printStream << "    -l, --list                          list available MIDI ports"    << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "    --delay={value[us|ms|s|m]}          delay (ms by default)"        << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "    --midi={port}                       MIDI input/output"            << std::endl;
+        printStream << "    --midi-input={port}                 MIDI input"                   << std::endl;
+        printStream << "    --midi-output={port}                MIDI output"                  << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "MIDI input/output:"                                                   << std::endl;
+        printStream << ""                                                                     << std::endl;
+        printStream << "  [I] " << _midiIn                                                    << std::endl;
+        printStream << "  [O] " << _midiOut                                                   << std::endl;
+        printStream << ""                                                                     << std::endl;
     }
 }
 
@@ -289,9 +301,12 @@ namespace launchpad {
 
 ListApp::ListApp ( const Console&     console
                  , Launchpad&         launchpad
-                 , const std::string& param
+                 , const std::string& param1
+                 , const std::string& param2
+                 , const std::string& param3
+                 , const std::string& param4
                  , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, delay)
 {
 }
 
@@ -343,9 +358,12 @@ namespace launchpad {
 
 CycleApp::CycleApp ( const Console&     console
                    , Launchpad&         launchpad
-                   , const std::string& param
+                   , const std::string& param1
+                   , const std::string& param2
+                   , const std::string& param3
+                   , const std::string& param4
                    , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (500 * 1000)))
 {
     lp::reset(_launchpad);
 }
@@ -370,9 +388,12 @@ namespace launchpad {
 
 PrintApp::PrintApp ( const Console&     console
                    , Launchpad&         launchpad
-                   , const std::string& param
+                   , const std::string& param1
+                   , const std::string& param2
+                   , const std::string& param3
+                   , const std::string& param4
                    , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (250 * 1000)))
 {
     lp::reset(_launchpad);
 }
@@ -384,7 +405,7 @@ PrintApp::~PrintApp()
 
 void PrintApp::main()
 {
-    lp::print(_launchpad, _param, _red, _black, _delay, _shutdown);
+    lp::print(_launchpad, _param1, _red, _black, _delay, _shutdown);
 }
 
 }
@@ -397,9 +418,12 @@ namespace launchpad {
 
 ScrollApp::ScrollApp ( const Console&     console
                      , Launchpad&         launchpad
-                     , const std::string& param
+                     , const std::string& param1
+                     , const std::string& param2
+                     , const std::string& param3
+                     , const std::string& param4
                      , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (100 * 1000)))
 {
     lp::reset(_launchpad);
 }
@@ -411,7 +435,7 @@ ScrollApp::~ScrollApp()
 
 void ScrollApp::main()
 {
-    lp::scroll(_launchpad, _param, _red, _black, _delay, _shutdown);
+    lp::scroll(_launchpad, _param1, _red, _black, _delay, _shutdown);
 }
 
 }
@@ -424,9 +448,12 @@ namespace launchpad {
 
 GameOfLifeApp::GameOfLifeApp ( const Console&     console
                              , Launchpad&         launchpad
-                             , const std::string& param
+                             , const std::string& param1
+                             , const std::string& param2
+                             , const std::string& param3
+                             , const std::string& param4
                              , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param, delay)
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (750 * 1000)))
     , _color0(lp::color(0, 0))
     , _color1(lp::color(128, 0))
     , _color2(lp::color(255, 0))
@@ -487,13 +514,13 @@ void GameOfLifeApp::init()
         set((row + 1), (col + 1), Cell::kLIVE);
     };
 
-    if(_param.empty()) {
+    if(_param1.empty()) {
         init_random();
     }
-    else if(_param == "random") {
+    else if(_param1 == "random") {
         init_random();
     }
-    else if(_param == "glider") {
+    else if(_param1 == "glider") {
         init_glider(1, 1);
     }
     else {

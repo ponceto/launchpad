@@ -358,7 +358,6 @@ protected: // protected interface
 
     void failure(const char* message = nullptr)
     {
-
         if(_status == EXIT_SUCCESS) {
             _status = EXIT_FAILURE;
         }

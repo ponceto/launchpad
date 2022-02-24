@@ -36,8 +36,8 @@ class Application final
     : public Program
 {
 public: // public interface
-    Application ( const ArgList&
-                , const Console& );
+    Application ( const ArgList& arglist
+                , const Console& console );
 
     virtual ~Application();
 
@@ -55,19 +55,27 @@ public: // public interface
     virtual void onSIGHGUP() override;
 
 protected: // protected interface
-    virtual bool init();
-    virtual bool loop();
+    bool init();
+    bool loop();
+
+    bool parseOption(const std::string& option);
+    bool parseCommand(const std::string& command);
+    bool parseArgument(const std::string& argument);
 
 protected: // protected data
-    std::string           _lpName;
-    std::string           _lpProgram;
-    std::string           _lpInput;
-    std::string           _lpOutput;
-    std::string           _lpParam;
-    std::string           _lpDelay;
     LaunchpadAppType      _lpAppType;
     LaunchpadUniquePtr    _lpLaunchpad;
     LaunchpadAppUniquePtr _lpLaunchpadApp;
+    std::string           _lpName;
+    std::string           _lpInput;
+    std::string           _lpOutput;
+    std::string           _lpProgram;
+    std::string           _lpCommand;
+    std::string           _lpParam1;
+    std::string           _lpParam2;
+    std::string           _lpParam3;
+    std::string           _lpParam4;
+    std::string           _lpDelay;
 };
 
 // ---------------------------------------------------------------------------

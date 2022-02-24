@@ -132,35 +132,44 @@ If you have installed the project, you can find the executable in the `${destina
 ### Usage
 
 ```
-Usage: launchpad [OPTIONS]
+Usage: launchpad [options] <command> [<args>]
 
-    -h, --help                  display this help
-    -l, --list                  list available MIDI ports
+Commands:
 
-    --cycle                     cycle colors
-    --print={text}              print a text
-    --scroll={text}             scroll a text
-    --game-of-life={pattern}    Conway's game of life
+    help                                display help
+    list                                list available MIDI ports
+    cycle                               cycle colors
+    print {text}                        print a text
+    scroll {text}                       scroll a text
+    gameoflife [{pattern}]              play the Conway game of life
 
-    --delay={value[us|ms|s|m]}  delay (ms by default)
+Options:
 
-    --midi={port}               MIDI input/output
-    --midi-input={port}         MIDI input
-    --midi-output={port}        MIDI output
+    -h, --help                          display this help
+    -l, --list                          list available MIDI ports
 
-MIDI input:
+    --delay={value[us|ms|s|m]}          delay (ms by default)
 
-  - Launchpad Mini
+    --midi={port}                       MIDI input/output
+    --midi-input={port}                 MIDI input
+    --midi-output={port}                MIDI output
 
-MIDI output:
+MIDI input/output:
 
-  - Launchpad Mini
+  [I] Launchpad Mini
+  [O] Launchpad Mini
 
 ```
 
 ### List available MIDI peripherals
 
 You can list all MIDI peripherals with the `-l` or the `--list` options:
+
+```
+launchpad list
+```
+
+or
 
 ```
 launchpad -l
@@ -206,7 +215,7 @@ launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
 You can cycle all colors with this command:
 
 ```
-launchpad --cycle [--delay={value[ms|s|m]}]
+launchpad cycle [--delay={value[ms|s|m]}]
 ```
 
 ### Print application
@@ -214,7 +223,7 @@ launchpad --cycle [--delay={value[ms|s|m]}]
 You can print a text with this command:
 
 ```
-launchpad --print={text} [--delay={value[ms|s|m]}]
+launchpad print {text} [--delay={value[ms|s|m]}]
 ```
 
 ### Scroll application
@@ -222,7 +231,7 @@ launchpad --print={text} [--delay={value[ms|s|m]}]
 You can scroll a text with this command:
 
 ```
-launchpad --scroll={text} [--delay={value[ms|s|m]}]
+launchpad scroll {text} [--delay={value[ms|s|m]}]
 ```
 
 ### GameOfLife application
@@ -230,7 +239,7 @@ launchpad --scroll={text} [--delay={value[ms|s|m]}]
 You can run a Conway's Game of Life with this command:
 
 ```
-launchpad --game-of-life={pattern} [--delay={value[ms|s|m]}]
+launchpad gameoflife [{pattern}] [--delay={value[ms|s|m]}]
 ```
 
 The pattern value can be:

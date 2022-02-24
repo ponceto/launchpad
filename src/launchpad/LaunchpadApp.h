@@ -52,7 +52,10 @@ class LaunchpadApp
 public: // public interface
     LaunchpadApp ( const Console&     console
                  , Launchpad&         launchpad
-                 , const std::string& param
+                 , const std::string& param1
+                 , const std::string& param2
+                 , const std::string& param3
+                 , const std::string& param4
                  , const uint64_t     delay );
 
     virtual ~LaunchpadApp();
@@ -78,7 +81,10 @@ protected: // protected interface
 protected: // protected data
     const Console&    _console;
     Launchpad&        _launchpad;
-    const std::string _param;
+    const std::string _param1;
+    const std::string _param2;
+    const std::string _param3;
+    const std::string _param4;
     const uint64_t    _delay;
     const uint8_t     _black;
     const uint8_t     _red;
@@ -105,7 +111,10 @@ class HelpApp final
 public: // public interface
     HelpApp ( const Console&     console
             , Launchpad&         launchpad
-            , const std::string& param
+            , const std::string& param1
+            , const std::string& param2
+            , const std::string& param3
+            , const std::string& param4
             , const uint64_t     delay
             , const std::string& program
             , const std::string& midiIn
@@ -135,7 +144,10 @@ class ListApp final
 public: // public interface
     ListApp ( const Console&     console
             , Launchpad&         launchpad
-            , const std::string& param
+            , const std::string& param1
+            , const std::string& param2
+            , const std::string& param3
+            , const std::string& param4
             , const uint64_t     delay );
 
     virtual ~ListApp();
@@ -161,7 +173,10 @@ class CycleApp final
 public: // public interface
     CycleApp ( const Console&     console
              , Launchpad&         launchpad
-             , const std::string& param
+             , const std::string& param1
+             , const std::string& param2
+             , const std::string& param3
+             , const std::string& param4
              , const uint64_t     delay );
 
     virtual ~CycleApp();
@@ -183,7 +198,10 @@ class PrintApp final
 public: // public interface
     PrintApp ( const Console&     console
              , Launchpad&         launchpad
-             , const std::string& param
+             , const std::string& param1
+             , const std::string& param2
+             , const std::string& param3
+             , const std::string& param4
              , const uint64_t     delay );
 
     virtual ~PrintApp();
@@ -205,7 +223,10 @@ class ScrollApp final
 public: // public interface
     ScrollApp ( const Console&     console
               , Launchpad&         launchpad
-              , const std::string& param
+              , const std::string& param1
+              , const std::string& param2
+              , const std::string& param3
+              , const std::string& param4
               , const uint64_t     delay );
 
     virtual ~ScrollApp();
@@ -227,7 +248,10 @@ class GameOfLifeApp final
 public: // public interface
     GameOfLifeApp ( const Console&     console
                   , Launchpad&         launchpad
-                  , const std::string& param
+                  , const std::string& param1
+                  , const std::string& param2
+                  , const std::string& param3
+                  , const std::string& param4
                   , const uint64_t     delay );
 
     virtual ~GameOfLifeApp();

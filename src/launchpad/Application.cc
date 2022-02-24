@@ -150,15 +150,19 @@ struct arg
 Application::Application ( const ArgList& arglist
                          , const Console& console )
      : Program(arglist, console)
-     , _lpName("Launchpad Mini")
-     , _lpProgram("launchpad")
-     , _lpInput(_lpName)
-     , _lpOutput(_lpName)
-     , _lpParam()
-     , _lpDelay()
      , _lpAppType(LaunchpadAppType::kNONE)
      , _lpLaunchpad()
      , _lpLaunchpadApp()
+     , _lpName("Launchpad Mini")
+     , _lpInput(_lpName)
+     , _lpOutput(_lpName)
+     , _lpProgram("launchpad")
+     , _lpCommand()
+     , _lpParam1()
+     , _lpParam2()
+     , _lpParam3()
+     , _lpParam4()
+     , _lpDelay()
 {
 }
 
@@ -177,96 +181,118 @@ int Application::main()
     return EXIT_SUCCESS;
 }
 
+bool Application::parseOption(const std::string& option)
+{
+    const std::string value(arg::value(option));
+
+    if(arg::is(option, "-h") || arg::is(option, "--help")) {
+        if(_lpAppType != LaunchpadAppType::kHELP) {
+            _lpAppType = LaunchpadAppType::kHELP;
+        }
+        return true;
+    }
+    else if(arg::is(option, "-l") || arg::is(option, "--list")) {
+        if(_lpAppType != LaunchpadAppType::kHELP) {
+            _lpAppType = LaunchpadAppType::kLIST;
+        }
+        return true;
+    }
+    else if(arg::is(option, "--delay")) {
+        _lpDelay  = value;
+        return true;
+    }
+    else if(arg::is(option, "--midi")) {
+        _lpInput  = value;
+        _lpOutput = value;
+        return true;
+    }
+    else if(arg::is(option, "--midi-input")) {
+        _lpInput  = value;
+        return true;
+    }
+    else if(arg::is(option, "--midi-output")) {
+        _lpOutput = value;
+        return true;
+    }
+    return false;
+}
+
+bool Application::parseCommand(const std::string& command)
+{
+    auto setCommand = [&](const LaunchpadAppType appType) -> bool
+    {
+        _lpCommand = command;
+        if(_lpAppType == LaunchpadAppType::kNONE) {
+            _lpAppType = appType;
+        }
+        return true;
+    };
+
+    if(_lpCommand.empty()) {
+        if(command.compare("help") == 0) {
+            return setCommand(LaunchpadAppType::kHELP);
+        }
+        if(command.compare("list") == 0) {
+            return setCommand(LaunchpadAppType::kLIST);
+        }
+        if(command.compare("cycle") == 0) {
+            return setCommand(LaunchpadAppType::kCYCLE);
+        }
+        if(command.compare("print") == 0) {
+            return setCommand(LaunchpadAppType::kPRINT);
+        }
+        if(command.compare("scroll") == 0) {
+            return setCommand(LaunchpadAppType::kSCROLL);
+        }
+        if(command.compare("gameoflife") == 0) {
+            return setCommand(LaunchpadAppType::kGAMEOFLIFE);
+        }
+    }
+    return false;
+}
+
+bool Application::parseArgument(const std::string& argument)
+{
+    if(_lpCommand.empty()) {
+        return false;
+    }
+    else if(_lpParam1.empty()) {
+        _lpParam1 = argument;
+        return true;
+    }
+    else if(_lpParam2.empty()) {
+        _lpParam2 = argument;
+        return true;
+    }
+    else if(_lpParam3.empty()) {
+        _lpParam3 = argument;
+        return true;
+    }
+    else if(_lpParam4.empty()) {
+        _lpParam4 = argument;
+        return true;
+    }
+    return false;
+}
+
 bool Application::init()
 {
-    /* parse command-line */ {
-        int index = 0;
-        for(auto& argument : _arglist) {
-            const std::string argval(arg::value(argument));
-            if(index++ == 0) {
-                _lpProgram = arg::basename(argument);
-            }
-            else if(arg::is(argument, "-h") || arg::is(argument, "--help")) {
-                if(_lpAppType != LaunchpadAppType::kHELP) {
-                    _lpAppType = LaunchpadAppType::kHELP;
-                    _lpParam   = argval;
-                }
-            }
-            else if(arg::is(argument, "-l") || arg::is(argument, "--list")) {
-                if(_lpAppType != LaunchpadAppType::kHELP) {
-                    _lpAppType = LaunchpadAppType::kLIST;
-                    _lpParam   = argval;
-                }
-            }
-            else if(arg::is(argument, "--cycle")) {
-                if(_lpAppType == LaunchpadAppType::kNONE) {
-                    _lpAppType = LaunchpadAppType::kCYCLE;
-                    if(argval.size() != 0) {
-                        _lpParam = argval;
-                    }
-                    if(_lpDelay.empty()) {
-                        _lpDelay = "500ms";
-                    }
-                }
-            }
-            else if(arg::is(argument, "--print")) {
-                if(_lpAppType == LaunchpadAppType::kNONE) {
-                    _lpAppType = LaunchpadAppType::kPRINT;
-                    if(argval.size() != 0) {
-                        _lpParam = argval;
-                    }
-                    if(_lpParam.empty()) {
-                        _lpParam = " Hello World ";
-                    }
-                    if(_lpDelay.empty()) {
-                        _lpDelay = "250ms";
-                    }
-                }
-            }
-            else if(arg::is(argument, "--scroll")) {
-                if(_lpAppType == LaunchpadAppType::kNONE) {
-                    _lpAppType = LaunchpadAppType::kSCROLL;
-                    if(argval.size() != 0) {
-                        _lpParam = argval;
-                    }
-                    if(_lpParam.empty()) {
-                        _lpParam = " Hello World ";
-                    }
-                    if(_lpDelay.empty()) {
-                        _lpDelay = "100ms";
-                    }
-                }
-            }
-            else if(arg::is(argument, "--game-of-life")) {
-                if(_lpAppType == LaunchpadAppType::kNONE) {
-                    _lpAppType = LaunchpadAppType::kGAMEOFLIFE;
-                    if(argval.size() != 0) {
-                        _lpParam = argval;
-                    }
-                    if(_lpParam.empty()) {
-                        _lpParam = "random";
-                    }
-                    if(_lpDelay.empty()) {
-                        _lpDelay = "750ms";
-                    }
-                }
-            }
-            else if(arg::is(argument, "--delay")) {
-                _lpDelay  = argval;
-            }
-            else if(arg::is(argument, "--midi")) {
-                _lpInput  = argval;
-                _lpOutput = argval;
-            }
-            else if(arg::is(argument, "--midi-input")) {
-                _lpInput  = argval;
-            }
-            else if(arg::is(argument, "--midi-output")) {
-                _lpOutput = argval;
-            }
-            else {
-                throw std::runtime_error(std::string("invalid argument") + ' ' + argument);
-            }
+    int index = 0;
+    for(auto& argument : _arglist) {
+        if(index++ == 0) {
+            _lpProgram = arg::basename(argument);
+        }
+        else if(parseOption(argument) != false) {
+            continue;
+        }
+        else if(parseCommand(argument) != false) {
+            continue;
+        }
+        else if(parseArgument(argument) != false) {
+            continue;
+        }
+        else {
+            throw std::runtime_error(std::string("invalid argument") + ' ' + argument);
         }
     }
     return true;
@@ -279,37 +305,37 @@ bool Application::loop()
         case LaunchpadAppType::kHELP:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
-                _lpLaunchpadApp = std::make_unique<launchpad::HelpApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
+                _lpLaunchpadApp = std::make_unique<launchpad::HelpApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
             }
             break;
         case LaunchpadAppType::kLIST:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
-                _lpLaunchpadApp = std::make_unique<launchpad::ListApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::ListApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kCYCLE:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::CycleApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::CycleApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kPRINT:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::PrintApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::PrintApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kSCROLL:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::ScrollApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::ScrollApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
         case LaunchpadAppType::kGAMEOFLIFE:
             {
                 _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::GameOfLifeApp>(_console, *_lpLaunchpad, _lpParam, arg::delay(_lpDelay));
+                _lpLaunchpadApp = std::make_unique<launchpad::GameOfLifeApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
     }
