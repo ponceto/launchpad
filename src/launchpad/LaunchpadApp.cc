@@ -44,6 +44,20 @@ struct lp
     static constexpr uint8_t COLS   = 8;
     static constexpr uint8_t STRIDE = 16;
 
+    static void assert_empty(const std::string& argument, const bool expected)
+    {
+        if(expected == false) {
+            if(argument.empty() != expected) {
+                throw std::runtime_error(std::string("missing argument"));
+            }
+        }
+        else {
+            if(argument.empty() != expected) {
+                throw std::runtime_error(std::string("unexpected argument") + ' ' + '<' + argument + '>');
+            }
+        }
+    };
+
     static uint8_t color(uint8_t r, uint8_t g, bool copy = false, bool clear = false)
     {
         const uint8_t flags = static_cast<uint8_t>(false) << 7 // must be 0
@@ -139,7 +153,7 @@ struct lp
         const size_t size = string.size();
         const int    pixs = COLS * (size > 0 ? size - 1 : 0);
 
-        for(uint8_t pix = 0; pix < pixs; ++pix) {
+        for(int pix = 0; pix < pixs; ++pix) {
             if(shutdown != false) {
                 break;
             }
@@ -308,6 +322,10 @@ ListApp::ListApp ( const Console&     console
                  , const uint64_t     delay )
     : LaunchpadApp(console, launchpad, param1, param2, param3, param4, delay)
 {
+    lp::assert_empty(param1, true);
+    lp::assert_empty(param2, true);
+    lp::assert_empty(param3, true);
+    lp::assert_empty(param4, true);
 }
 
 ListApp::~ListApp()
@@ -363,8 +381,12 @@ CycleApp::CycleApp ( const Console&     console
                    , const std::string& param3
                    , const std::string& param4
                    , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (500 * 1000)))
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, checkDelay(delay, DEFAULT_DELAY))
 {
+    lp::assert_empty(param1, true);
+    lp::assert_empty(param2, true);
+    lp::assert_empty(param3, true);
+    lp::assert_empty(param4, true);
     lp::reset(_launchpad);
 }
 
@@ -393,8 +415,12 @@ PrintApp::PrintApp ( const Console&     console
                    , const std::string& param3
                    , const std::string& param4
                    , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (250 * 1000)))
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, checkDelay(delay, DEFAULT_DELAY))
 {
+    lp::assert_empty(param1, false);
+    lp::assert_empty(param2, true);
+    lp::assert_empty(param3, true);
+    lp::assert_empty(param4, true);
     lp::reset(_launchpad);
 }
 
@@ -423,8 +449,12 @@ ScrollApp::ScrollApp ( const Console&     console
                      , const std::string& param3
                      , const std::string& param4
                      , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (100 * 1000)))
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, checkDelay(delay, DEFAULT_DELAY))
 {
+    lp::assert_empty(param1, false);
+    lp::assert_empty(param2, true);
+    lp::assert_empty(param3, true);
+    lp::assert_empty(param4, true);
     lp::reset(_launchpad);
 }
 
@@ -453,7 +483,7 @@ GameOfLifeApp::GameOfLifeApp ( const Console&     console
                              , const std::string& param3
                              , const std::string& param4
                              , const uint64_t     delay )
-    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, (delay != 0 ? delay : (750 * 1000)))
+    : LaunchpadApp(console, launchpad, param1, param2, param3, param4, checkDelay(delay, DEFAULT_DELAY))
     , _color0(lp::color(0, 0))
     , _color1(lp::color(128, 0))
     , _color2(lp::color(255, 0))
@@ -462,6 +492,10 @@ GameOfLifeApp::GameOfLifeApp ( const Console&     console
     , _world()
     , _cache()
 {
+//  lp::assert_empty(param1, false);
+    lp::assert_empty(param2, true);
+    lp::assert_empty(param3, true);
+    lp::assert_empty(param4, true);
     lp::reset(_launchpad);
 }
 
@@ -524,7 +558,7 @@ void GameOfLifeApp::init()
         init_glider(1, 1);
     }
     else {
-        throw std::runtime_error("invalid pattern");
+        throw std::runtime_error(std::string("invalid pattern") + ' ' + '<' + _param1 + '>');
     }
 }
 

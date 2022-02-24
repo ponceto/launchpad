@@ -54,7 +54,7 @@ public: // public interface
     virtual void onSIGINTR() override;
     virtual void onSIGHGUP() override;
 
-protected: // protected interface
+private: // private interface
     bool init();
     bool loop();
 
@@ -62,7 +62,7 @@ protected: // protected interface
     bool parseCommand(const std::string& command);
     bool parseArgument(const std::string& argument);
 
-protected: // protected data
+private: // private data
     LaunchpadAppType      _lpAppType;
     LaunchpadUniquePtr    _lpLaunchpad;
     LaunchpadAppUniquePtr _lpLaunchpadApp;

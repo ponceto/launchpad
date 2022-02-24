@@ -292,7 +292,7 @@ bool Application::init()
             continue;
         }
         else {
-            throw std::runtime_error(std::string("invalid argument") + ' ' + argument);
+            throw std::runtime_error(std::string("unexpected argument") + ' ' + '<' + argument + '>');
         }
     }
     return true;

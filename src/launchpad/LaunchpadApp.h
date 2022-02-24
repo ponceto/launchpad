@@ -78,6 +78,14 @@ protected: // protected interface
 
     void sleep(const uint64_t delay);
 
+    static uint64_t checkDelay(const uint64_t delay, const uint64_t default_delay)
+    {
+        if(delay == 0UL) {
+            return default_delay;
+        }
+        return delay;
+    }
+
 protected: // protected data
     const Console&    _console;
     Launchpad&        _launchpad;
@@ -124,6 +132,9 @@ public: // public interface
 
     virtual void main() override;
 
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 0UL;
+
 private: // private data
     const std::string _program;
     const std::string _midiIn;
@@ -154,7 +165,10 @@ public: // public interface
 
     virtual void main() override;
 
-protected: // protected interface
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 0UL;
+
+private: // private interface
     virtual void listInputs();
     virtual void listOutputs();
 };
@@ -182,6 +196,9 @@ public: // public interface
     virtual ~CycleApp();
 
     virtual void main() override;
+
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 500UL * 1000UL;
 };
 
 }
@@ -207,6 +224,9 @@ public: // public interface
     virtual ~PrintApp();
 
     virtual void main() override;
+
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 250UL * 1000UL;
 };
 
 }
@@ -232,6 +252,9 @@ public: // public interface
     virtual ~ScrollApp();
 
     virtual void main() override;
+
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 125UL * 1000UL;
 };
 
 }
@@ -258,10 +281,12 @@ public: // public interface
 
     virtual void main() override;
 
-private: // private interface
-    static constexpr uint8_t ROWS = 8;
-    static constexpr uint8_t COLS = 8;
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 750UL * 1000UL;
+    static constexpr uint8_t  ROWS          = 8;
+    static constexpr uint8_t  COLS          = 8;
 
+private: // private interface
     enum class Cell : uint8_t
     {
         kNONE = 0,
