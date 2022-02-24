@@ -272,37 +272,128 @@ HelpApp::~HelpApp()
 
 void HelpApp::main()
 {
-    std::ostream& printStream(_console.printStream);
-
-    if(printStream.good()) {
-        printStream << "Usage: " << _program << ' ' << "[options] <command> [<args>]"         << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "Commands:"                                                            << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "    help                                display help"                 << std::endl;
-        printStream << "    list                                list available MIDI ports"    << std::endl;
-        printStream << "    cycle                               cycle colors"                 << std::endl;
-        printStream << "    print {text}                        print a text"                 << std::endl;
-        printStream << "    scroll {text}                       scroll a text"                << std::endl;
-        printStream << "    gameoflife [{pattern}]              play the Conway game of life" << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "Options:"                                                             << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "    -h, --help                          display this help"            << std::endl;
-        printStream << "    -l, --list                          list available MIDI ports"    << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "    --delay={value[us|ms|s|m]}          delay (ms by default)"        << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "    --midi={port}                       MIDI input/output"            << std::endl;
-        printStream << "    --midi-input={port}                 MIDI input"                   << std::endl;
-        printStream << "    --midi-output={port}                MIDI output"                  << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "MIDI input/output:"                                                   << std::endl;
-        printStream << ""                                                                     << std::endl;
-        printStream << "  [I] " << _midiIn                                                    << std::endl;
-        printStream << "  [O] " << _midiOut                                                   << std::endl;
-        printStream << ""                                                                     << std::endl;
+    if(_param1.empty()) {
+        baseHelp();
     }
+    else if(_param1 == "help") {
+        helpHelp();
+    }
+    else if(_param1 == "list") {
+        listHelp();
+    }
+    else if(_param1 == "cycle") {
+        cycleHelp();
+    }
+    else if(_param1 == "print") {
+        printHelp();
+    }
+    else if(_param1 == "scroll") {
+        scrollHelp();
+    }
+    else if(_param1 == "gameoflife") {
+        gameoflifeHelp();
+    }
+    else {
+        throw std::runtime_error(std::string("no command named") + ' ' + '<' + _param1 + '>');
+    }
+}
+
+void HelpApp::baseHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] <command> [<args>]"      << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Commands:"                                                         << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "    help [{command}]                    display help"              << std::endl;
+    stream << "    list                                list available MIDI ports" << std::endl;
+    stream << "    cycle                               cycle colors"              << std::endl;
+    stream << "    print {message}                     print a message"           << std::endl;
+    stream << "    scroll {message}                    scroll a message"          << std::endl;
+    stream << "    gameoflife [{pattern}]              display the game of life"  << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Options:"                                                          << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "    -h, --help                          display this help"         << std::endl;
+    stream << "    -l, --list                          list available MIDI ports" << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "    --delay={value[us|ms|s|m]}          delay (ms by default)"     << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "    --midi={port}                       MIDI input/output"         << std::endl;
+    stream << "    --midi-input={port}                 MIDI input"                << std::endl;
+    stream << "    --midi-output={port}                MIDI output"               << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "MIDI input/output:"                                                << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "  [I] " << _midiIn                                                 << std::endl;
+    stream << "  [O] " << _midiOut                                                << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::helpHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] help [{command}]"        << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Display help information about" << ' ' << _program                 << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::listHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] list"                    << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "List all available MIDI ports"                                     << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::cycleHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] cycle"                   << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Display a color cycle on the launchpad"                            << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::printHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] print {message}"         << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Print a message on the launchpad"                                  << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::scrollHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] scroll {message}"        << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Scroll a message on the launchpad"                                 << std::endl;
+    stream << ""                                                                  << std::endl;
+}
+
+void HelpApp::gameoflifeHelp()
+{
+    std::ostream& stream(_console.printStream);
+
+    stream << "Usage: " << _program << ' ' << "[options] gameoflife {pattern}"    << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "Display a Game of Life on the launchpad"                           << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "The optional pattern can be one of these:"                         << std::endl;
+    stream << ""                                                                  << std::endl;
+    stream << "    - random"                                                      << std::endl;
+    stream << "    - glider"                                                      << std::endl;
+    stream << ""                                                                  << std::endl;
 }
 
 }

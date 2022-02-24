@@ -135,6 +135,15 @@ public: // public interface
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 0UL;
 
+private: // private interface
+    void baseHelp();
+    void helpHelp();
+    void listHelp();
+    void cycleHelp();
+    void printHelp();
+    void scrollHelp();
+    void gameoflifeHelp();
+
 private: // private data
     const std::string _program;
     const std::string _midiIn;

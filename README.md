@@ -136,12 +136,12 @@ Usage: launchpad [options] <command> [<args>]
 
 Commands:
 
-    help                                display help
+    help [{command}]                    display help
     list                                list available MIDI ports
     cycle                               cycle colors
-    print {text}                        print a text
-    scroll {text}                       scroll a text
-    gameoflife [{pattern}]              play the Conway game of life
+    print {message}                     print a message
+    scroll {message}                    scroll a message
+    gameoflife [{pattern}]              display the game of life
 
 Options:
 
@@ -163,10 +163,13 @@ MIDI input/output:
 
 ### List available MIDI peripherals
 
-You can list all MIDI peripherals with the `-l` or the `--list` options:
+You can list all MIDI peripherals with this command:
 
 ```
-launchpad list
+Usage: launchpad [options] list
+
+List all available MIDI ports
+
 ```
 
 or
@@ -215,23 +218,32 @@ launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
 You can cycle all colors with this command:
 
 ```
-launchpad cycle [--delay={value[ms|s|m]}]
+Usage: launchpad [options] cycle
+
+Display a color cycle on the launchpad
+
 ```
 
 ### Print application
 
-You can print a text with this command:
+You can print a message with this command:
 
 ```
-launchpad print {text} [--delay={value[ms|s|m]}]
+Usage: launchpad [options] print {message}
+
+Print a message on the launchpad
+
 ```
 
 ### Scroll application
 
-You can scroll a text with this command:
+You can scroll a message with this command:
 
 ```
-launchpad scroll {text} [--delay={value[ms|s|m]}]
+Usage: launchpad [options] scroll {message}
+
+Scroll a message on the launchpad
+
 ```
 
 ### GameOfLife application
@@ -239,10 +251,13 @@ launchpad scroll {text} [--delay={value[ms|s|m]}]
 You can run a Conway's Game of Life with this command:
 
 ```
-launchpad gameoflife [{pattern}] [--delay={value[ms|s|m]}]
+Usage: launchpad [options] gameoflife {pattern}
+
+Display a Game of Life on the launchpad
+
+The optional pattern can be one of these:
+
+    - random
+    - glider
+
 ```
-
-The pattern value can be:
-
-  - `random` for a random pattern
-  - `glider` for a glider pattern
