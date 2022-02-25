@@ -48,12 +48,12 @@ bin_PROGRAMS = \
 # ----------------------------------------------------------------------------
 
 launchpad_SOURCES = \
-	Font8x8.cc \
-	Font8x8.h \
-	LaunchpadApp.cc \
-	LaunchpadApp.h \
 	Application.cc \
 	Application.h \
+	Command.cc \
+	Command.h \
+	Font8x8.cc \
+	Font8x8.h \
 	main.cc \
 	$(NULL)
 

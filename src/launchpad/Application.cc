@@ -53,6 +53,11 @@ struct arg
         return str;
     }
 
+    static bool equals(const std::string& argument, const std::string& expected)
+    {
+        return argument == expected;
+    }
+
     static bool is(const std::string& argument, const std::string& expected)
     {
         if(argument == expected) {
@@ -150,9 +155,9 @@ struct arg
 Application::Application ( const ArgList& arglist
                          , const Console& console )
      : Program(arglist, console)
-     , _lpAppType(LaunchpadAppType::kNONE)
-     , _lpLaunchpad()
-     , _lpLaunchpadApp()
+     , _lpCommandType(CommandType::kNONE)
+     , _lpLaunchpadPtr()
+     , _lpCommandPtr()
      , _lpName("Launchpad Mini")
      , _lpInput(_lpName)
      , _lpOutput(_lpName)
@@ -186,14 +191,14 @@ bool Application::parseOption(const std::string& option)
     const std::string value(arg::value(option));
 
     if(arg::is(option, "-h") || arg::is(option, "--help")) {
-        if(_lpAppType != LaunchpadAppType::kHELP) {
-            _lpAppType = LaunchpadAppType::kHELP;
+        if(_lpCommandType != CommandType::kHELP) {
+            _lpCommandType = CommandType::kHELP;
         }
         return true;
     }
     else if(arg::is(option, "-l") || arg::is(option, "--list")) {
-        if(_lpAppType != LaunchpadAppType::kHELP) {
-            _lpAppType = LaunchpadAppType::kLIST;
+        if(_lpCommandType != CommandType::kHELP) {
+            _lpCommandType = CommandType::kLIST;
         }
         return true;
     }
@@ -219,33 +224,36 @@ bool Application::parseOption(const std::string& option)
 
 bool Application::parseCommand(const std::string& command)
 {
-    auto setCommand = [&](const LaunchpadAppType appType) -> bool
+    auto setCommand = [&](const CommandType appType) -> bool
     {
         _lpCommand = command;
-        if(_lpAppType == LaunchpadAppType::kNONE) {
-            _lpAppType = appType;
+        if(_lpCommandType == CommandType::kNONE) {
+            _lpCommandType = appType;
         }
         return true;
     };
 
     if(_lpCommand.empty()) {
-        if(command.compare("help") == 0) {
-            return setCommand(LaunchpadAppType::kHELP);
+        if(arg::equals(command, "help")) {
+            return setCommand(CommandType::kHELP);
         }
-        if(command.compare("list") == 0) {
-            return setCommand(LaunchpadAppType::kLIST);
+        if(arg::equals(command, "list")) {
+            return setCommand(CommandType::kLIST);
         }
-        if(command.compare("cycle") == 0) {
-            return setCommand(LaunchpadAppType::kCYCLE);
+        if(arg::equals(command, "reset")) {
+            return setCommand(CommandType::kRESET);
         }
-        if(command.compare("print") == 0) {
-            return setCommand(LaunchpadAppType::kPRINT);
+        if(arg::equals(command, "cycle")) {
+            return setCommand(CommandType::kCYCLE);
         }
-        if(command.compare("scroll") == 0) {
-            return setCommand(LaunchpadAppType::kSCROLL);
+        if(arg::equals(command, "print")) {
+            return setCommand(CommandType::kPRINT);
         }
-        if(command.compare("gameoflife") == 0) {
-            return setCommand(LaunchpadAppType::kGAMEOFLIFE);
+        if(arg::equals(command, "scroll")) {
+            return setCommand(CommandType::kSCROLL);
+        }
+        if(arg::equals(command, "gameoflife")) {
+            return setCommand(CommandType::kGAMEOFLIFE);
         }
     }
     return false;
@@ -300,59 +308,65 @@ bool Application::init()
 
 bool Application::loop()
 {
-    switch(_lpAppType) {
+    switch(_lpCommandType) {
         default:
-        case LaunchpadAppType::kHELP:
+        case CommandType::kHELP:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
-                _lpLaunchpadApp = std::make_unique<launchpad::HelpApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName);
+                _lpCommandPtr   = std::make_unique<launchpad::HelpCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
             }
             break;
-        case LaunchpadAppType::kLIST:
+        case CommandType::kLIST:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName);
-                _lpLaunchpadApp = std::make_unique<launchpad::ListApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName);
+                _lpCommandPtr   = std::make_unique<launchpad::ListCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
-        case LaunchpadAppType::kCYCLE:
+        case CommandType::kRESET:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::CycleApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::ResetCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
-        case LaunchpadAppType::kPRINT:
+        case CommandType::kCYCLE:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::PrintApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::CycleCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
-        case LaunchpadAppType::kSCROLL:
+        case CommandType::kPRINT:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::ScrollApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::PrintCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
-        case LaunchpadAppType::kGAMEOFLIFE:
+        case CommandType::kSCROLL:
             {
-                _lpLaunchpad    = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpLaunchpadApp = std::make_unique<launchpad::GameOfLifeApp>(_console, *_lpLaunchpad, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::ScrollCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+            }
+            break;
+        case CommandType::kGAMEOFLIFE:
+            {
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::GameOfLifeCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
     }
-    if(_lpLaunchpadApp) {
-        _lpLaunchpadApp->main();
+    if(_lpCommandPtr) {
+        _lpCommandPtr->execute();
     }
     return true;
 }
 
 void Application::stop()
 {
-    if(_lpLaunchpadApp) {
-        _lpLaunchpadApp->shutdown();
+    if(_lpCommandPtr) {
+        _lpCommandPtr->stop();
     }
 }
 
-void Application::onTimeout()
+void Application::onTIMEOUT()
 {
 }
 

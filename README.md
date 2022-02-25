@@ -138,6 +138,7 @@ Commands:
 
     help [{command}]                    display help
     list                                list available MIDI ports
+    reset                               reset the Launchpad
     cycle                               cycle colors
     print {message}                     print a message
     scroll {message}                    scroll a message
@@ -156,12 +157,61 @@ Options:
 
 MIDI input/output:
 
-  [I] Launchpad Mini
-  [O] Launchpad Mini
+    [I] Launchpad Mini
+    [O] Launchpad Mini
+
+    +---------------------------------------+
+    |  1   2   3   4   5   6   7   8        |
+    | ( ) ( ) ( ) ( ) ( ) ( ) ( ) ( )       |
+    |                                       |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) A |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) B |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) C |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) D |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) E |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) F |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) G |
+    | [ ] [ ] [ ] [ ] [ ] [ ] [ ] [ ] ( ) H |
+    |                                       |
+    | Novation               Launchpad MINI |
+    +---------------------------------------+
 
 ```
 
-### List available MIDI peripherals
+### Select the MIDI device
+
+By default, the utility will use the string `Launchpad Mini` to find a usable Launchpad.
+
+But you can select a specific MIDI peripheral by using `--midi`, `--midi-input`, `--midi-output` options.
+
+The utility will use each provided string like a prefix to compare with all available inputs/outputs and will choose the first match.
+
+Example:
+
+```
+launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
+```
+
+You can list all MIDI peripherals with this the `list` command or the `--list` or `-l` options.
+
+## Available commands
+
+### help
+
+You can display the help with this command:
+
+```
+Usage: launchpad [options] help [{command}]
+
+Display help information about the program or a command
+
+Arguments:
+
+    command             specifies the command
+
+```
+
+### list
 
 You can list all MIDI peripherals with this command:
 
@@ -170,18 +220,10 @@ Usage: launchpad [options] list
 
 List all available MIDI ports
 
-```
+Arguments:
 
-or
+    none
 
-```
-launchpad -l
-```
-
-or
-
-```
-launchpad --list
 ```
 
 Outputs example:
@@ -199,65 +241,80 @@ Available MIDI outputs :
 
 ```
 
-### Select a specific MIDI peripheral
+### reset
 
-By default, the utility will use the string `Launchpad Mini` to find a usable Launchpad.
-
-But you can select a specific MIDI peripheral by using `--midi`, `--midi-input`, `--midi-output` options.
-
-The utility will use each provided string like a prefix to compare with all available inputs/outputs and will choose the first match.
-
-Example:
+You can reset the device with this command:
 
 ```
-launchpad --midi="Launchpad Mini:Launchpad Mini MIDI 1"
+Usage: launchpad [options] reset
+
+Reset the Launchpad
+
+Arguments:
+
+    none
+
 ```
 
-### Colors cycle
+### cycle
 
 You can cycle all colors with this command:
 
 ```
 Usage: launchpad [options] cycle
 
-Display a color cycle on the launchpad
+Display a color cycle on the Launchpad
+
+Arguments:
+
+    none
 
 ```
 
-### Print a message
+### print
 
 You can print a message with this command:
 
 ```
 Usage: launchpad [options] print {message}
 
-Print a message on the launchpad
+Print a message on the Launchpad
+
+Arguments:
+
+    message             specifies the message to print
 
 ```
 
-### Scroll a message
+### scroll
 
 You can scroll a message with this command:
 
 ```
 Usage: launchpad [options] scroll {message}
 
-Scroll a message on the launchpad
+Scroll a message on the Launchpad
+
+Arguments:
+
+    message             specifies the message to scroll
 
 ```
 
-### Game of Life
+### gameoflife
 
-You can run the Conway [Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) with this command:
+You can display the [Conway Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) with this command:
 
 ```
 Usage: launchpad [options] gameoflife {pattern}
 
-Display a Game of Life on the launchpad
+Display a Game of Life on the Launchpad
 
-The optional pattern can be one of these:
+Arguments:
 
-    - random
-    - glider
+    pattern             specifies the pattern to simulate:
+
+                        'random' display a random pattern
+                        'glider' display a glider pattern
 
 ```

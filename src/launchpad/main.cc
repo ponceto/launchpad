@@ -17,6 +17,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -266,7 +267,7 @@ protected: // protected interface
             while(_shutdown == false) {
                 const int signum = sig::wait();
                 if(signum == -1) {
-                    _application->onTimeout();
+                    _application->onTIMEOUT();
                 }
                 else switch(signum) {
                     case sig::kSIGALRM:

@@ -18,7 +18,7 @@
 #define __Application_h__
 
 #include <base/Program.h>
-#include "LaunchpadApp.h"
+#include "Command.h"
 
 // ---------------------------------------------------------------------------
 // some aliases
@@ -44,7 +44,7 @@ public: // public interface
     virtual int  main() override;
     virtual void stop() override;
 
-    virtual void onTimeout() override;
+    virtual void onTIMEOUT() override;
     virtual void onSIGALRM() override;
     virtual void onSIGUSR1() override;
     virtual void onSIGUSR2() override;
@@ -63,9 +63,9 @@ private: // private interface
     bool parseArgument(const std::string& argument);
 
 private: // private data
-    LaunchpadAppType      _lpAppType;
-    LaunchpadUniquePtr    _lpLaunchpad;
-    LaunchpadAppUniquePtr _lpLaunchpadApp;
+    CommandType           _lpCommandType;
+    LaunchpadUniquePtr    _lpLaunchpadPtr;
+    CommandUniquePtr      _lpCommandPtr;
     std::string           _lpName;
     std::string           _lpInput;
     std::string           _lpOutput;

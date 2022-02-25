@@ -37,7 +37,7 @@ public: // public interface
     virtual int  main();
     virtual void stop();
 
-    virtual void onTimeout();
+    virtual void onTIMEOUT();
     virtual void onSIGALRM();
     virtual void onSIGUSR1();
     virtual void onSIGUSR2();

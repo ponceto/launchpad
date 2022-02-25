@@ -1,5 +1,5 @@
 /*
- * LaunchpadApp.h - Copyright (c) 2001-2022 - Olivier Poncet
+ * Command.h - Copyright (c) 2001-2022 - Olivier Poncet
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __LaunchpadApp_h__
-#define __LaunchpadApp_h__
+#ifndef __Command_h__
+#define __Command_h__
 
 #include <base/Console.h>
 #include <novation/Launchpad.h>
@@ -29,42 +29,43 @@ using Launchpad          = novation::Launchpad;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
 
 // ---------------------------------------------------------------------------
-// LaunchpadAppType
+// CommandType
 // ---------------------------------------------------------------------------
 
-enum class LaunchpadAppType
+enum class CommandType
 {
     kNONE       = 0,
     kHELP       = 1,
     kLIST       = 2,
-    kCYCLE      = 3,
-    kPRINT      = 4,
-    kSCROLL     = 5,
-    kGAMEOFLIFE = 6,
+    kRESET      = 3,
+    kCYCLE      = 4,
+    kPRINT      = 5,
+    kSCROLL     = 6,
+    kGAMEOFLIFE = 7,
 };
 
 // ---------------------------------------------------------------------------
-// LaunchpadApp
+// Command
 // ---------------------------------------------------------------------------
 
-class LaunchpadApp
+class Command
 {
 public: // public interface
-    LaunchpadApp ( const Console&     console
-                 , Launchpad&         launchpad
-                 , const std::string& param1
-                 , const std::string& param2
-                 , const std::string& param3
-                 , const std::string& param4
-                 , const uint64_t     delay );
+    Command ( const Console&     console
+            , Launchpad&         launchpad
+            , const std::string& argument1
+            , const std::string& argument2
+            , const std::string& argument3
+            , const std::string& argument4
+            , const uint64_t     delay );
 
-    virtual ~LaunchpadApp();
+    virtual ~Command();
 
-    virtual void main() = 0;
+    virtual void execute() = 0;
 
-    void shutdown()
+    void stop()
     {
-        _shutdown = true;
+        _stop = true;
     }
 
 protected: // protected interface
@@ -89,60 +90,62 @@ protected: // protected interface
 protected: // protected data
     const Console&    _console;
     Launchpad&        _launchpad;
-    const std::string _param1;
-    const std::string _param2;
-    const std::string _param3;
-    const std::string _param4;
+    const std::string _argument1;
+    const std::string _argument2;
+    const std::string _argument3;
+    const std::string _argument4;
     const uint64_t    _delay;
     const uint8_t     _black;
     const uint8_t     _red;
     const uint8_t     _green;
     const uint8_t     _amber;
-    bool              _shutdown;
+    bool              _stop;
 };
 
 // ---------------------------------------------------------------------------
-// LaunchpadAppUniquePtr
+// CommandUniquePtr
 // ---------------------------------------------------------------------------
 
-using LaunchpadAppUniquePtr = std::unique_ptr<LaunchpadApp>;
+using CommandUniquePtr = std::unique_ptr<Command>;
 
 // ---------------------------------------------------------------------------
-// launchpad::HelpApp
+// launchpad::HelpCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class HelpApp final
-    : public LaunchpadApp
+class HelpCmd final
+    : public Command
 {
 public: // public interface
-    HelpApp ( const Console&     console
+    HelpCmd ( const Console&     console
             , Launchpad&         launchpad
-            , const std::string& param1
-            , const std::string& param2
-            , const std::string& param3
-            , const std::string& param4
+            , const std::string& argument1
+            , const std::string& argument2
+            , const std::string& argument3
+            , const std::string& argument4
             , const uint64_t     delay
             , const std::string& program
             , const std::string& midiIn
             , const std::string& midiOut );
 
-    virtual ~HelpApp();
+    virtual ~HelpCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 0UL;
 
 private: // private interface
-    void baseHelp();
-    void helpHelp();
-    void listHelp();
-    void cycleHelp();
-    void printHelp();
-    void scrollHelp();
-    void gameoflifeHelp();
+    void launchpad(std::ostream&);
+    void baseHelp(std::ostream&);
+    void helpHelp(std::ostream&);
+    void listHelp(std::ostream&);
+    void resetHelp(std::ostream&);
+    void cycleHelp(std::ostream&);
+    void printHelp(std::ostream&);
+    void scrollHelp(std::ostream&);
+    void gameoflifeHelp(std::ostream&);
 
 private: // private data
     const std::string _program;
@@ -153,26 +156,26 @@ private: // private data
 }
 
 // ---------------------------------------------------------------------------
-// launchpad::ListApp
+// launchpad::ListCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class ListApp final
-    : public LaunchpadApp
+class ListCmd final
+    : public Command
 {
 public: // public interface
-    ListApp ( const Console&     console
+    ListCmd ( const Console&     console
             , Launchpad&         launchpad
-            , const std::string& param1
-            , const std::string& param2
-            , const std::string& param3
-            , const std::string& param4
+            , const std::string& argument1
+            , const std::string& argument2
+            , const std::string& argument3
+            , const std::string& argument4
             , const uint64_t     delay );
 
-    virtual ~ListApp();
+    virtual ~ListCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 0UL;
@@ -185,26 +188,54 @@ private: // private interface
 }
 
 // ---------------------------------------------------------------------------
-// launchpad::CycleApp
+// launchpad::ResetCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class CycleApp final
-    : public LaunchpadApp
+class ResetCmd final
+    : public Command
 {
 public: // public interface
-    CycleApp ( const Console&     console
+    ResetCmd ( const Console&     console
              , Launchpad&         launchpad
-             , const std::string& param1
-             , const std::string& param2
-             , const std::string& param3
-             , const std::string& param4
+             , const std::string& argument1
+             , const std::string& argument2
+             , const std::string& argument3
+             , const std::string& argument4
              , const uint64_t     delay );
 
-    virtual ~CycleApp();
+    virtual ~ResetCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
+
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 0UL;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// launchpad::CycleCmd
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class CycleCmd final
+    : public Command
+{
+public: // public interface
+    CycleCmd ( const Console&     console
+             , Launchpad&         launchpad
+             , const std::string& argument1
+             , const std::string& argument2
+             , const std::string& argument3
+             , const std::string& argument4
+             , const uint64_t     delay );
+
+    virtual ~CycleCmd();
+
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 500UL * 1000UL;
@@ -213,26 +244,26 @@ private: // private static data
 }
 
 // ---------------------------------------------------------------------------
-// launchpad::PrintApp
+// launchpad::PrintCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class PrintApp final
-    : public LaunchpadApp
+class PrintCmd final
+    : public Command
 {
 public: // public interface
-    PrintApp ( const Console&     console
+    PrintCmd ( const Console&     console
              , Launchpad&         launchpad
-             , const std::string& param1
-             , const std::string& param2
-             , const std::string& param3
-             , const std::string& param4
+             , const std::string& argument1
+             , const std::string& argument2
+             , const std::string& argument3
+             , const std::string& argument4
              , const uint64_t     delay );
 
-    virtual ~PrintApp();
+    virtual ~PrintCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 250UL * 1000UL;
@@ -241,26 +272,26 @@ private: // private static data
 }
 
 // ---------------------------------------------------------------------------
-// launchpad::ScrollApp
+// launchpad::ScrollCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class ScrollApp final
-    : public LaunchpadApp
+class ScrollCmd final
+    : public Command
 {
 public: // public interface
-    ScrollApp ( const Console&     console
+    ScrollCmd ( const Console&     console
               , Launchpad&         launchpad
-              , const std::string& param1
-              , const std::string& param2
-              , const std::string& param3
-              , const std::string& param4
+              , const std::string& argument1
+              , const std::string& argument2
+              , const std::string& argument3
+              , const std::string& argument4
               , const uint64_t     delay );
 
-    virtual ~ScrollApp();
+    virtual ~ScrollCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 125UL * 1000UL;
@@ -269,26 +300,26 @@ private: // private static data
 }
 
 // ---------------------------------------------------------------------------
-// launchpad::GameOfLifeApp
+// launchpad::GameOfLifeCmd
 // ---------------------------------------------------------------------------
 
 namespace launchpad {
 
-class GameOfLifeApp final
-    : public LaunchpadApp
+class GameOfLifeCmd final
+    : public Command
 {
 public: // public interface
-    GameOfLifeApp ( const Console&     console
+    GameOfLifeCmd ( const Console&     console
                   , Launchpad&         launchpad
-                  , const std::string& param1
-                  , const std::string& param2
-                  , const std::string& param3
-                  , const std::string& param4
+                  , const std::string& argument1
+                  , const std::string& argument2
+                  , const std::string& argument3
+                  , const std::string& argument4
                   , const uint64_t     delay );
 
-    virtual ~GameOfLifeApp();
+    virtual ~GameOfLifeCmd();
 
-    virtual void main() override;
+    virtual void execute() override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 750UL * 1000UL;
@@ -298,11 +329,11 @@ private: // private static data
 private: // private interface
     enum class Cell : uint8_t
     {
-        kNONE = 0,
-        kHIDE = 1,
-        kDEAD = 2,
-        kKILL = 3,
-        kLIVE = 4,
+        kEMPTY = 0,
+        kASHES = 1,
+        kDEAD  = 2,
+        kDYING = 3,
+        kALIVE = 4,
     };
 
     struct State
@@ -339,4 +370,4 @@ private: // private data
 // End-Of-File
 // ---------------------------------------------------------------------------
 
-#endif /* __LaunchpadApp_h__ */
+#endif /* __Command_h__ */

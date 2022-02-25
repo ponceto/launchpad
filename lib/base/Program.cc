@@ -54,7 +54,7 @@ void Program::stop()
 {
 }
 
-void Program::onTimeout()
+void Program::onTIMEOUT()
 {
 }
 
