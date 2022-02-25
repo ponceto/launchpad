@@ -41,9 +41,15 @@ namespace {
 
 struct lp
 {
-    static constexpr uint8_t ROWS   = 8;
-    static constexpr uint8_t COLS   = 8;
-    static constexpr uint8_t STRIDE = 16;
+    static constexpr uint8_t ROWS = 8;
+    static constexpr uint8_t COLS = 8;
+
+    static constexpr uint8_t BUFFER0  = 0;
+    static constexpr uint8_t BUFFER1  = 1;
+    static constexpr bool    DO_FLASH = true;
+    static constexpr bool    NO_FLASH = false;
+    static constexpr bool    DO_COPY  = true;
+    static constexpr bool    NO_COPY  = false;
 
     enum {
         kANY   = 0,
@@ -71,64 +77,16 @@ struct lp
         }
     };
 
-    static uint8_t color(uint8_t r, uint8_t g, bool copy = false, bool clear = false)
-    {
-        const uint8_t flags = static_cast<uint8_t>(false) << 7 // must be 0
-                            | static_cast<uint8_t>(false) << 6 // must be 0
-                            | static_cast<uint8_t>(false) << 5 // green msb
-                            | static_cast<uint8_t>(false) << 4 // green lsb
-                            | static_cast<uint8_t>(clear) << 3 // clear
-                            | static_cast<uint8_t>(copy)  << 2 // copy
-                            | static_cast<uint8_t>(false) << 1 // red msb
-                            | static_cast<uint8_t>(false) << 0 // red lsb
-                            ;
-        return flags
-             | (((g >> 6) & 0x03) << 4)
-             | (((r >> 6) & 0x03) << 0)
-             ;
-    }
-
     static void sleep(Launchpad& launchpad, const uint64_t delay)
     {
         std::this_thread::sleep_for(std::chrono::microseconds(delay));
     }
 
-    static void reset(Launchpad& launchpad)
+    static void clear(Launchpad& launchpad)
     {
-        launchpad.reset();
-    }
-
-    static void set(Launchpad& launchpad, const uint8_t row, const uint8_t col, const uint8_t color)
-    {
-        if((row < ROWS) && (col < COLS)) {
-            launchpad.setPad(((row * STRIDE) + col), color);
-        }
-    }
-
-    static void clear(Launchpad& launchpad, const uint8_t color)
-    {
-        launchpad.setBuffer(0, 1, false, false);
         for(uint8_t row = 0; row < ROWS; ++row) {
             for(uint8_t col = 0; col < COLS; ++col) {
-                launchpad.setPad(((row * STRIDE) + col), color);
-            }
-        }
-        launchpad.setBuffer(1, 0, false, true );
-        launchpad.setBuffer(0, 0, false, false);
-    }
-
-    static void cycle(Launchpad& launchpad, const uint64_t delay, bool& stop)
-    {
-        for(int r = 0; r < 256; r += 64) {
-            if(stop != false) {
-                break;
-            }
-            for(int g = 0; g < 256; g += 64) {
-                if(stop != false) {
-                    break;
-                }
-                lp::clear(launchpad, lp::color(r, g));
-                lp::sleep(launchpad, delay);
+                launchpad.clearPad(row, col);
             }
         }
     }
@@ -139,23 +97,23 @@ struct lp
             if(stop != false) {
                 break;
             }
-            launchpad.setBuffer(0, 1, false, false);
+            launchpad.setBuffer(BUFFER0, BUFFER1, NO_FLASH, NO_COPY);
             const uint8_t index = (character < Font8x8::MAX_CHARS ? character : 0);
             for(uint8_t row = 0; row < ROWS; ++row) {
                 const uint8_t val = Font8x8::data[index][row];
                 uint8_t       bit = 0x01;
                 for(uint8_t col = 0; col < COLS; ++col) {
                     if((val & bit) != 0) {
-                        launchpad.setPad(((row * STRIDE) + col), foreground);
+                        launchpad.setPad(row, col, foreground);
                     }
                     else {
-                        launchpad.setPad(((row * STRIDE) + col), background);
+                        launchpad.setPad(row, col, background);
                     }
                     bit <<= 1;
                 }
             }
-            launchpad.setBuffer(1, 0, false, true );
-            launchpad.setBuffer(0, 0, false, false);
+            launchpad.setBuffer(BUFFER1, BUFFER0, NO_FLASH, DO_COPY);
+            launchpad.setBuffer(BUFFER0, BUFFER0, NO_FLASH, NO_COPY);
             lp::sleep(launchpad, delay);
         }
     }
@@ -170,22 +128,22 @@ struct lp
             if(stop != false) {
                 break;
             }
-            launchpad.setBuffer(0, 1, false, false);
+            launchpad.setBuffer(BUFFER0, BUFFER1, NO_FLASH, NO_COPY);
             for(uint8_t row = 0; row < ROWS; ++row) {
                 for(uint8_t col = 0; col < COLS; ++col) {
                     const uint8_t chr = data[((col + pix) / COLS)];
                     const uint8_t bit = 1 << ((col + pix) % COLS);
                     const uint8_t val = Font8x8::data[chr][row];
                     if((val & bit) != 0) {
-                        launchpad.setPad(((row * STRIDE) + col), foreground);
+                        launchpad.setPad(row, col, foreground);
                     }
                     else {
-                        launchpad.setPad(((row * STRIDE) + col), background);
+                        launchpad.setPad(row, col, background);
                     }
                 }
             }
-            launchpad.setBuffer(1, 0, false, true );
-            launchpad.setBuffer(0, 0, false, false);
+            launchpad.setBuffer(BUFFER1, BUFFER0, NO_FLASH, DO_COPY);
+            launchpad.setBuffer(BUFFER0, BUFFER0, NO_FLASH, NO_COPY);
             lp::sleep(launchpad, delay);
         }
     }
@@ -211,10 +169,10 @@ Command::Command ( const Console&     console
     , _argument3(argument3)
     , _argument4(argument4)
     , _delay(delay)
-    , _black(lp::color(0, 0))
-    , _red(lp::color(255, 0))
-    , _green(lp::color(0, 255))
-    , _amber(lp::color(255, 255))
+    , _black(_launchpad.makeColor(0, 0))
+    , _red(_launchpad.makeColor(255, 0))
+    , _green(_launchpad.makeColor(0, 255))
+    , _amber(_launchpad.makeColor(255, 255))
     , _stop(false)
 {
 }
@@ -564,7 +522,7 @@ ResetCmd::~ResetCmd()
 
 void ResetCmd::execute()
 {
-    lp::reset(_launchpad);
+    _launchpad.reset();
 }
 
 }
@@ -592,12 +550,45 @@ CycleCmd::CycleCmd ( const Console&     console
 
 CycleCmd::~CycleCmd()
 {
-    lp::clear(_launchpad, _black);
+    lp::clear(_launchpad);
 }
 
 void CycleCmd::execute()
 {
-    lp::cycle(_launchpad, _delay, _stop);
+    auto begin = [&]() -> void
+    {
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER1, lp::NO_FLASH, lp::NO_COPY);
+    };
+
+    auto end = [&]() -> void
+    {
+        _launchpad.setBuffer(lp::BUFFER1, lp::BUFFER0, lp::NO_FLASH, lp::DO_COPY);
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER0, lp::NO_FLASH, lp::NO_COPY);
+        sleep(_delay);
+    };
+
+    auto display = [&](const uint8_t color) -> void
+    {
+        for(uint8_t row = 0; row < lp::ROWS; ++row) {
+            for(uint8_t col = 0; col < lp::COLS; ++col) {
+                _launchpad.setPad(row, col, color);
+            }
+        }
+    };
+
+    for(int r = 0; r < 256; r += 85) {
+        if(_stop != false) {
+            break;
+        }
+        for(int g = 0; g < 256; g += 85) {
+            if(_stop != false) {
+                break;
+            }
+            begin();
+            display(_launchpad.makeColor(r, g));
+            end();
+        }
+    }
 }
 
 }
@@ -625,7 +616,7 @@ PrintCmd::PrintCmd ( const Console&     console
 
 PrintCmd::~PrintCmd()
 {
-    lp::clear(_launchpad, _black);
+    lp::clear(_launchpad);
 }
 
 void PrintCmd::execute()
@@ -658,7 +649,7 @@ ScrollCmd::ScrollCmd ( const Console&     console
 
 ScrollCmd::~ScrollCmd()
 {
-    lp::clear(_launchpad, _black);
+    lp::clear(_launchpad);
 }
 
 void ScrollCmd::execute()
@@ -682,11 +673,11 @@ GameOfLifeCmd::GameOfLifeCmd ( const Console&     console
                              , const std::string& argument4
                              , const uint64_t     delay )
     : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
-    , _color0(lp::color(0, 0))
-    , _color1(lp::color(64, 0))
-    , _color2(lp::color(255, 0))
-    , _color3(lp::color(255, 255))
-    , _color4(lp::color(0, 255))
+    , _color0(_launchpad.makeColor(0, 0))
+    , _color1(_launchpad.makeColor(64, 0))
+    , _color2(_launchpad.makeColor(255, 0))
+    , _color3(_launchpad.makeColor(255, 255))
+    , _color4(_launchpad.makeColor(0, 255))
     , _world()
     , _cache()
 {
@@ -698,7 +689,7 @@ GameOfLifeCmd::GameOfLifeCmd ( const Console&     console
 
 GameOfLifeCmd::~GameOfLifeCmd()
 {
-    lp::clear(_launchpad, _black);
+    lp::clear(_launchpad);
 }
 
 void GameOfLifeCmd::execute()
@@ -835,12 +826,15 @@ void GameOfLifeCmd::loop()
 
     auto display = [&]() -> void
     {
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER1, lp::NO_FLASH, lp::NO_COPY);
         for(uint8_t row = 0; row < ROWS; ++row) {
             for(uint8_t col = 0; col < COLS; ++col) {
                 const Cell& cell(_world.get(row, col));
-                lp::set(_launchpad, row, col, color(cell));
+                _launchpad.setPad(row, col, color(cell));
             }
         }
+        _launchpad.setBuffer(lp::BUFFER1, lp::BUFFER0, lp::NO_FLASH, lp::DO_COPY);
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER0, lp::NO_FLASH, lp::NO_COPY);
     };
 
     auto prepare = [&]() -> void

@@ -29,40 +29,50 @@
 #include "Launchpad.h"
 
 // ---------------------------------------------------------------------------
-// <anonymous>::helper
+// <anonymous>::lp
 // ---------------------------------------------------------------------------
 
 namespace {
 
-struct helper
+struct lp
 {
-    using Layout = novation::Launchpad::Layout;
-
-    static uint8_t layout_byte(uint8_t layout)
-    {
-        switch(layout) {
-            case Layout::GRID_LAYOUT:
-            case Layout::DRUM_LAYOUT:
-                return layout;
-            default:
-                break;
-        }
-        return Layout::GRID_LAYOUT;
-    }
+    enum Layout {
+        CMD_RESET_BOARD = 0x00,
+        CMD_GRID_LAYOUT = 0x01,
+        CMD_DRUM_LAYOUT = 0x02,
+    };
 
     static uint8_t buffer_byte(uint8_t display, uint8_t update, bool flash, bool copy)
     {
-        const uint8_t b7 = static_cast<uint8_t>(false)        << 7; // always false
-        const uint8_t b6 = static_cast<uint8_t>(false)        << 6; // always false
-        const uint8_t b5 = static_cast<uint8_t>(true)         << 5; // always true
-        const uint8_t b4 = static_cast<uint8_t>(copy)         << 4; // copy flag
-        const uint8_t b3 = static_cast<uint8_t>(flash)        << 3; // flash flag
-        const uint8_t b2 = static_cast<uint8_t>(update != 0)  << 2; // update buffer
-        const uint8_t b1 = static_cast<uint8_t>(false)        << 1; // always false
-        const uint8_t b0 = static_cast<uint8_t>(display != 0) << 0; // display buffer
+        const uint8_t b7 = static_cast<uint8_t>(false)        << 7; /* always false   */
+        const uint8_t b6 = static_cast<uint8_t>(false)        << 6; /* always false   */
+        const uint8_t b5 = static_cast<uint8_t>(true)         << 5; /* always true    */
+        const uint8_t b4 = static_cast<uint8_t>(copy)         << 4; /* copy flag      */
+        const uint8_t b3 = static_cast<uint8_t>(flash)        << 3; /* flash flag     */
+        const uint8_t b2 = static_cast<uint8_t>(update != 0)  << 2; /* update buffer  */
+        const uint8_t b1 = static_cast<uint8_t>(false)        << 1; /* always false   */
+        const uint8_t b0 = static_cast<uint8_t>(display != 0) << 0; /* display buffer */
         const uint8_t rc = (b7 | b6 | b5 | b4 | b3 | b2 | b1 | b0);
 
         return rc;
+    }
+
+    static uint8_t color_byte(uint8_t r, uint8_t g, bool copy, bool clear)
+    {
+        const uint8_t flags = static_cast<uint8_t>(false) << 7 /* must be unset                             */
+                            | static_cast<uint8_t>(false) << 6 /* must be unset                             */
+                            | static_cast<uint8_t>(false) << 5 /* green brightness (most significant bit)   */
+                            | static_cast<uint8_t>(false) << 4 /* green brightness (least significant bit)  */
+                            | static_cast<uint8_t>(clear) << 3 /* clear the other buffer’s copy of this led */
+                            | static_cast<uint8_t>(copy)  << 2 /* write this led data to both buffers       */
+                            | static_cast<uint8_t>(false) << 1 /* red brightness (most significant bit)     */
+                            | static_cast<uint8_t>(false) << 0 /* red brightness (least significant bit)    */
+                            ;
+        const uint8_t color = flags
+                            | (((g >> 6) & 0x03) << 4)
+                            | (((r >> 6) & 0x03) << 0)
+                            ;
+        return color;
     }
 };
 
@@ -122,16 +132,25 @@ void Launchpad::reset()
 {
     constexpr uint8_t channel    = Midi::CHANNEL_01_CONTROL_CHANGE;
     constexpr uint8_t controller = Midi::CONTROLLER_BANK_SELECT;
-    constexpr uint8_t value      = 0x00;
+    constexpr uint8_t value      = lp::CMD_RESET_BOARD;
 
     Midi::send(*(_midi.out), channel, controller, value);
 }
 
-void Launchpad::setLayout(uint8_t layout)
+void Launchpad::setGridLayout()
 {
     constexpr uint8_t channel    = Midi::CHANNEL_01_CONTROL_CHANGE;
     constexpr uint8_t controller = Midi::CONTROLLER_BANK_SELECT;
-    const     uint8_t value      = helper::layout_byte(layout);
+    const     uint8_t value      = lp::CMD_GRID_LAYOUT;
+
+    Midi::send(*(_midi.out), channel, controller, value);
+}
+
+void Launchpad::setDrumLayout()
+{
+    constexpr uint8_t channel    = Midi::CHANNEL_01_CONTROL_CHANGE;
+    constexpr uint8_t controller = Midi::CONTROLLER_BANK_SELECT;
+    const     uint8_t value      = lp::CMD_DRUM_LAYOUT;
 
     Midi::send(*(_midi.out), channel, controller, value);
 }
@@ -140,7 +159,7 @@ void Launchpad::setBuffer(uint8_t display, uint8_t update, bool flash, bool copy
 {
     constexpr uint8_t channel    = Midi::CHANNEL_01_CONTROL_CHANGE;
     constexpr uint8_t controller = Midi::CONTROLLER_BANK_SELECT;
-    const     uint8_t value      = helper::buffer_byte(display, update, flash, copy);
+    const     uint8_t value      = lp::buffer_byte(display, update, flash, copy);
 
     Midi::send(*(_midi.out), channel, controller, value);
 }
@@ -152,6 +171,38 @@ void Launchpad::setPad(uint8_t pad, uint8_t color)
     const     uint8_t velocity = color;
 
     Midi::send(*(_midi.out), channel, note, velocity);
+}
+
+void Launchpad::setPad(uint8_t row, uint8_t col, uint8_t color)
+{
+    constexpr uint8_t channel  = Midi::CHANNEL_01_NOTE_ON;
+    const     uint8_t note     = ((16 * row) + col);
+    const     uint8_t velocity = color;
+
+    Midi::send(*(_midi.out), channel, note, velocity);
+}
+
+void Launchpad::clearPad(uint8_t pad)
+{
+    constexpr uint8_t channel  = Midi::CHANNEL_01_NOTE_OFF;
+    const     uint8_t note     = pad;
+    const     uint8_t velocity = 0x00;
+
+    Midi::send(*(_midi.out), channel, note, velocity);
+}
+
+void Launchpad::clearPad(uint8_t row, uint8_t col)
+{
+    constexpr uint8_t channel  = Midi::CHANNEL_01_NOTE_OFF;
+    const     uint8_t note     = ((16 * row) + col);
+    const     uint8_t velocity = 0x00;
+
+    Midi::send(*(_midi.out), channel, note, velocity);
+}
+
+uint8_t Launchpad::makeColor(uint8_t red, uint8_t green, bool copy, bool clear)
+{
+    return lp::color_byte(red, green, copy, clear);
 }
 
 int Launchpad::enumerateInputs(std::vector<std::string>& inputs)
