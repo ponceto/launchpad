@@ -30,7 +30,6 @@
 #include <chrono>
 #include <thread>
 #include <random>
-#include "Font8x8.h"
 #include "Command.h"
 
 // ---------------------------------------------------------------------------

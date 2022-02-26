@@ -93,9 +93,17 @@ struct sig
         }
     }
 
-    static void procmask(const int how, const native_sigset& signal_set)
+    static void block(const native_sigset& signal_set)
     {
-       const int rc = ::pthread_sigmask(how, &signal_set, nullptr);
+       const int rc = ::pthread_sigmask(SIG_BLOCK, &signal_set, nullptr);
+        if(rc != 0) {
+            throw std::runtime_error("sigprocmask has failed");
+        }
+    }
+
+    static void unblock(const native_sigset& signal_set)
+    {
+       const int rc = ::pthread_sigmask(SIG_UNBLOCK, &signal_set, nullptr);
         if(rc != 0) {
             throw std::runtime_error("sigprocmask has failed");
         }
@@ -128,8 +136,8 @@ struct sig
 
     static int init()
     {
-        native_sigset    signal_set;
-        native_sigaction signal_action;
+        sig::native_sigset    signal_set;
+        sig::native_sigaction signal_action;
 
         /* initialize signal_set */ {
             sig::emptyset(signal_set);
@@ -157,8 +165,8 @@ struct sig
             sig::action(kSIGINTR, signal_action);
             sig::action(kSIGHGUP, signal_action);
         }
-        /* mask signals */ {
-            sig::procmask(SIG_BLOCK, signal_set);
+        /* block signals */ {
+            sig::block(signal_set);
         }
         return 0;
     }

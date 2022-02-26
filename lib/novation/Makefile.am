@@ -40,10 +40,14 @@ noinst_LTLIBRARIES = \
 # ----------------------------------------------------------------------------
 
 libnovation_la_SOURCES = \
-	Midi.cc \
-	Midi.h \
 	Launchpad.cc \
 	Launchpad.h \
+	Midi.cc \
+	Midi.h \
+	Font5x7.cc \
+	Font5x7.h \
+	Font8x8.cc \
+	Font8x8.h \
 	$(NULL)
 
 libnovation_la_CPPFLAGS = \

@@ -19,6 +19,8 @@
 
 #include <base/Console.h>
 #include <novation/Launchpad.h>
+#include <novation/Font5x7.h>
+#include <novation/Font8x8.h>
 
 // ---------------------------------------------------------------------------
 // some aliases
@@ -27,6 +29,8 @@
 using Console            = base::Console;
 using Launchpad          = novation::Launchpad;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
+using Font5x7            = novation::Font5x7;
+using Font8x8            = novation::Font8x8;
 
 // ---------------------------------------------------------------------------
 // CommandType

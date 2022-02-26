@@ -63,19 +63,19 @@ private: // private interface
     bool parseArgument(const std::string& argument);
 
 private: // private data
-    CommandType           _lpCommandType;
-    LaunchpadUniquePtr    _lpLaunchpadPtr;
-    CommandUniquePtr      _lpCommandPtr;
-    std::string           _lpName;
-    std::string           _lpInput;
-    std::string           _lpOutput;
-    std::string           _lpProgram;
-    std::string           _lpCommand;
-    std::string           _lpParam1;
-    std::string           _lpParam2;
-    std::string           _lpParam3;
-    std::string           _lpParam4;
-    std::string           _lpDelay;
+    CommandType        _lpCommandType;
+    LaunchpadUniquePtr _lpLaunchpadPtr;
+    CommandUniquePtr   _lpCommandPtr;
+    std::string        _lpName;
+    std::string        _lpInput;
+    std::string        _lpOutput;
+    std::string        _lpProgram;
+    std::string        _lpCommand;
+    std::string        _lpParam1;
+    std::string        _lpParam2;
+    std::string        _lpParam3;
+    std::string        _lpParam4;
+    std::string        _lpDelay;
 };
 
 // ---------------------------------------------------------------------------

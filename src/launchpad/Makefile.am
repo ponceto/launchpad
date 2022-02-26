@@ -52,8 +52,6 @@ launchpad_SOURCES = \
 	Application.h \
 	Command.cc \
 	Command.h \
-	Font8x8.cc \
-	Font8x8.h \
 	main.cc \
 	$(NULL)
 
