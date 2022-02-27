@@ -272,6 +272,9 @@ void HelpCmd::execute()
     else if(_argument1 == "scroll") {
         scrollHelp(_console.printStream);
     }
+    else if(_argument1 == "matrix") {
+        matrixHelp(_console.printStream);
+    }
     else if(_argument1 == "gameoflife") {
         gameoflifeHelp(_console.printStream);
     }
@@ -317,6 +320,7 @@ void HelpCmd::baseHelp(std::ostream& stream)
         stream << "    cycle                               cycle colors"              << std::endl;
         stream << "    print {message}                     print a message"           << std::endl;
         stream << "    scroll {message}                    scroll a message"          << std::endl;
+        stream << "    matrix                              matrix-like rain effect"   << std::endl;
         stream << "    gameoflife [{pattern}]              display the game of life"  << std::endl;
         stream << ""                                                                  << std::endl;
         stream << "Options:"                                                          << std::endl;
@@ -418,6 +422,20 @@ void HelpCmd::scrollHelp(std::ostream& stream)
         stream << "Arguments:"                                                        << std::endl;
         stream << ""                                                                  << std::endl;
         stream << "    message             specifies the message to scroll"           << std::endl;
+        stream << ""                                                                  << std::endl;
+    }
+}
+
+void HelpCmd::matrixHelp(std::ostream& stream)
+{
+    if(stream.good()) {
+        stream << "Usage: " << _program << ' ' << "[options] matrix"                  << std::endl;
+        stream << ""                                                                  << std::endl;
+        stream << "Matrix-like rain effect"                                           << std::endl;
+        stream << ""                                                                  << std::endl;
+        stream << "Arguments:"                                                        << std::endl;
+        stream << ""                                                                  << std::endl;
+        stream << "    none"                                                          << std::endl;
         stream << ""                                                                  << std::endl;
     }
 }
@@ -667,6 +685,178 @@ void ScrollCmd::execute()
 }
 
 // ---------------------------------------------------------------------------
+// launchpad::MatrixCmd
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+MatrixCmd::MatrixCmd ( const Console&     console
+                     , Launchpad&         launchpad
+                     , const std::string& argument1
+                     , const std::string& argument2
+                     , const std::string& argument3
+                     , const std::string& argument4
+                     , const uint64_t     delay )
+    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+    , _color0(_launchpad.makeColor(0, 0))
+    , _color1(_launchpad.makeColor(0, 85))
+    , _color2(_launchpad.makeColor(0, 170))
+    , _color3(_launchpad.makeColor(0, 255))
+    , _color4(_launchpad.makeColor(255, 255))
+    , _color5(_launchpad.makeColor(255, 0))
+    , _matrix()
+{
+    lp::assert_argument(argument1, lp::kANY);
+    lp::assert_argument(argument2, lp::kUNSET);
+    lp::assert_argument(argument3, lp::kUNSET);
+    lp::assert_argument(argument4, lp::kUNSET);
+}
+
+MatrixCmd::~MatrixCmd()
+{
+    lp::clear(_launchpad);
+}
+
+void MatrixCmd::execute()
+{
+    if(_stop == false) {
+        init();
+        do {
+            loop();
+            wait();
+        } while(_stop == false);
+    }
+}
+
+void MatrixCmd::onError(const std::string& message)
+{
+}
+
+void MatrixCmd::onInput(const std::string& message)
+{
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(message.data());
+    const size_t   size = message.size();
+
+    if((size == 3) && (data[0] == 0x90)) {
+        const uint8_t key = data[1];
+        const uint8_t val = data[2];
+        if(val != 0x00) {
+            const uint8_t row = key / 16;
+            const uint8_t col = key % 16;
+            if((row < ROWS) && (col < COLS)) {
+                _matrix.data[row % ROWS][col % COLS] = Cell::kLEVEL5;
+            }
+        }
+    }
+}
+
+void MatrixCmd::init()
+{
+    ::srand(::time(nullptr));
+}
+
+void MatrixCmd::loop()
+{
+    auto color = [&](const Cell cell) -> uint8_t
+    {
+        switch(cell) {
+            case Cell::kLEVEL0:
+                return _color0;
+            case Cell::kLEVEL1:
+                return _color1;
+            case Cell::kLEVEL2:
+                return _color2;
+            case Cell::kLEVEL3:
+                return _color3;
+            case Cell::kLEVEL4:
+                return _color4;
+            case Cell::kLEVEL5:
+                return _color5;
+            default:
+                break;
+        }
+        return _black;
+    };
+
+    auto mutate = [&](const Cell cell) -> Cell
+    {
+        switch(cell) {
+            case Cell::kLEVEL5:
+                return Cell::kLEVEL4;
+            case Cell::kLEVEL4:
+                return Cell::kLEVEL3;
+            case Cell::kLEVEL3:
+                return Cell::kLEVEL2;
+            case Cell::kLEVEL2:
+                return Cell::kLEVEL1;
+            case Cell::kLEVEL1:
+                return Cell::kLEVEL0;
+            case Cell::kLEVEL0:
+                return Cell::kLEVEL0;
+            default:
+                break;
+        }
+        return cell;
+    };
+
+    auto display = [&]() -> void
+    {
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER1, lp::NO_FLASH, lp::NO_COPY);
+        for(uint8_t row = 0; row < ROWS; ++row) {
+            for(uint8_t col = 0; col < COLS; ++col) {
+                const Cell& cell(_matrix.get(row, col));
+                _launchpad.setPad(row, col, color(cell));
+            }
+        }
+        _launchpad.setBuffer(lp::BUFFER1, lp::BUFFER0, lp::NO_FLASH, lp::DO_COPY);
+        _launchpad.setBuffer(lp::BUFFER0, lp::BUFFER0, lp::NO_FLASH, lp::NO_COPY);
+    };
+
+    auto prepare = [&]() -> void
+    {
+    };
+
+    auto process = [&]() -> void
+    {
+        for(uint8_t row = 0; row < ROWS; ++row) {
+            for(uint8_t col = 0; col < COLS; ++col) {
+                const Cell& prev(_matrix.get(((ROWS - 1) - row - 1), col));
+                Cell&       cell(_matrix.get(((ROWS - 1) - row - 0), col));
+                if(prev == Cell::kLEVEL5) {
+                    cell = prev;
+                }
+                else {
+                    cell = mutate(cell);
+                }
+            }
+        }
+    };
+
+    auto finalize = [&]() -> void
+    {
+        const uint8_t row = 0;
+        const uint8_t col = ::rand() % 31;
+        if(col < COLS) {
+            _matrix.data[row][col] = Cell::kLEVEL5;
+        }
+    };
+
+    display();
+    prepare();
+    process();
+    finalize();
+}
+
+void MatrixCmd::wait()
+{
+    if(_stop == false) {
+        sleep(_delay);
+    }
+}
+
+}
+
+// ---------------------------------------------------------------------------
 // launchpad::GameOfLifeCmd
 // ---------------------------------------------------------------------------
 
@@ -705,6 +895,7 @@ void GameOfLifeCmd::execute()
         init();
         do {
             loop();
+            wait();
         } while(_stop == false);
     }
 }
@@ -890,15 +1081,19 @@ void GameOfLifeCmd::loop()
     //  if(stable != false) {
     //      init();
     //  }
-        if(_stop == false) {
-            sleep(_delay);
-        }
     };
 
     display();
     prepare();
     process();
     finalize();
+}
+
+void GameOfLifeCmd::wait()
+{
+    if(_stop == false) {
+        sleep(_delay);
+    }
 }
 
 }

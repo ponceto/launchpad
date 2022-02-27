@@ -252,6 +252,9 @@ bool Application::parseCommand(const std::string& command)
         if(arg::equals(command, "scroll")) {
             return setCommand(CommandType::kSCROLL);
         }
+        if(arg::equals(command, "matrix")) {
+            return setCommand(CommandType::kMATRIX);
+        }
         if(arg::equals(command, "gameoflife")) {
             return setCommand(CommandType::kGAMEOFLIFE);
         }
@@ -344,6 +347,12 @@ bool Application::loop()
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
                 _lpCommandPtr   = std::make_unique<launchpad::ScrollCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+            }
+            break;
+        case CommandType::kMATRIX:
+            {
+                _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::MatrixCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kGAMEOFLIFE:

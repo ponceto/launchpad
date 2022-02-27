@@ -46,7 +46,8 @@ enum class CommandType
     kCYCLE      = 4,
     kPRINT      = 5,
     kSCROLL     = 6,
-    kGAMEOFLIFE = 7,
+    kMATRIX     = 7,
+    kGAMEOFLIFE = 8,
 };
 
 // ---------------------------------------------------------------------------
@@ -154,6 +155,7 @@ private: // private interface
     void cycleHelp(std::ostream&);
     void printHelp(std::ostream&);
     void scrollHelp(std::ostream&);
+    void matrixHelp(std::ostream&);
     void gameoflifeHelp(std::ostream&);
 
 private: // private data
@@ -309,6 +311,86 @@ private: // private static data
 }
 
 // ---------------------------------------------------------------------------
+// launchpad::MatrixCmd
+// ---------------------------------------------------------------------------
+
+namespace launchpad {
+
+class MatrixCmd final
+    : public Command
+{
+public: // public interface
+    MatrixCmd ( const Console&     console
+              , Launchpad&         launchpad
+              , const std::string& argument1
+              , const std::string& argument2
+              , const std::string& argument3
+              , const std::string& argument4
+              , const uint64_t     delay );
+
+    virtual ~MatrixCmd();
+
+    virtual void execute() override;
+
+    virtual void onError(const std::string& message) override;
+
+    virtual void onInput(const std::string& message) override;
+
+private: // private static data
+    static constexpr uint64_t DEFAULT_DELAY = 150UL * 1000UL;
+    static constexpr uint8_t  ROWS          = 8;
+    static constexpr uint8_t  COLS          = 8;
+
+private: // private interface
+    enum class Cell : uint8_t
+    {
+        kLEVEL0 = 0,
+        kLEVEL1 = 1,
+        kLEVEL2 = 2,
+        kLEVEL3 = 3,
+        kLEVEL4 = 4,
+        kLEVEL5 = 5,
+    };
+
+    struct Matrix
+    {
+        Cell data[ROWS][COLS];
+        Cell cell;
+
+        Cell& get(const uint8_t row, const uint8_t col)
+        {
+            if((row < ROWS) && (col < COLS)) {
+                return data[row][col];
+            }
+            return cell;
+        }
+
+        const Cell& get(const uint8_t row, const uint8_t col) const
+        {
+            if((row < ROWS) && (col < COLS)) {
+                return data[row][col];
+            }
+            return cell;
+        }
+    };
+
+    void init();
+    void loop();
+    void wait();
+
+private: // private data
+    const uint8_t _color0;
+    const uint8_t _color1;
+    const uint8_t _color2;
+    const uint8_t _color3;
+    const uint8_t _color4;
+    const uint8_t _color5;
+    Matrix        _matrix;
+};
+
+}
+
+// ---------------------------------------------------------------------------
 // launchpad::GameOfLifeCmd
 // ---------------------------------------------------------------------------
 
@@ -366,6 +448,7 @@ private: // private interface
 
     void init();
     void loop();
+    void wait();
 
 private: // private data
     const uint8_t _color0;

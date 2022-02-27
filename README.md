@@ -142,6 +142,7 @@ Commands:
     cycle                               cycle colors
     print {message}                     print a message
     scroll {message}                    scroll a message
+    matrix                              matrix-like rain effect
     gameoflife [{pattern}]              display the game of life
 
 Options:
@@ -298,6 +299,21 @@ Scroll a message on the Launchpad
 Arguments:
 
     message             specifies the message to scroll
+
+```
+
+### matrix
+
+You can display a Matrix-like rain effect with this command:
+
+```
+Usage: launchpad [options] matrix
+
+Matrix-like rain effect
+
+Arguments:
+
+    none
 
 ```
 
