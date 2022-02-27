@@ -238,12 +238,39 @@ int Launchpad::enumerateOutputs(std::vector<std::string>& outputs)
 
 void Launchpad::setListener(LaunchpadListener* listener)
 {
-    if((_listener = listener) != nullptr) {
-        _midi.in->setCallback(&lp::inputCallback, _listener);
-    }
-    else {
-        _midi.in->cancelCallback();
-    }
+    auto getInputMessage = [&]() -> bool
+    {
+        std::vector<unsigned char> message;
+        static_cast<void>(_midi.in->getMessage(&message));
+        return message.size() != 0;
+    };
+
+    auto flushInputMessages = [&]() -> void
+    {
+        while(getInputMessage() != false) {
+            /* do nothing */
+        }
+    };
+
+    auto setInputCallback = [&]() -> void
+    {
+        if((_listener == nullptr) && (listener != nullptr)) {
+            _midi.in->setCallback(&lp::inputCallback, listener);
+            _listener = listener;
+        }
+    };
+
+    auto unsetInputCallback = [&]() -> void
+    {
+        if(_listener != nullptr) {
+            _midi.in->cancelCallback();
+            _listener = nullptr;
+        }
+    };
+
+    unsetInputCallback();
+    flushInputMessages();
+    setInputCallback();
 }
 
 }
