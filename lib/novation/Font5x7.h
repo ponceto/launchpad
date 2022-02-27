@@ -28,7 +28,7 @@ struct Font5x7
     static constexpr int CHAR_WIDTH  = 5;
     static constexpr int CHAR_HEIGHT = 7;
     static constexpr int MAX_CHARS   = 128;
-    static constexpr int MAX_BYTES   = 8;
+    static constexpr int MAX_BYTES   = 5;
 
     static const uint8_t data[MAX_CHARS][MAX_BYTES];
 };
