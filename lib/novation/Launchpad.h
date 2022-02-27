@@ -20,22 +20,13 @@
 #include <novation/Midi.h>
 
 // ---------------------------------------------------------------------------
-// novation::LaunchpadListener
+// novation
 // ---------------------------------------------------------------------------
 
 namespace novation {
 
-class LaunchpadListener
-{
-public: // public interface
-    virtual void onLaunchpadError(const std::string& message) = 0;
-
-    virtual void onLaunchpadInput(const std::string& message) = 0;
-
-protected: // protected interface
-    LaunchpadListener() = default;
-    virtual ~LaunchpadListener() = default;
-};
+class Launchpad;
+class LaunchpadListener;
 
 }
 
@@ -103,6 +94,31 @@ protected: // protected data
 private: // disable copy and assignment
     Launchpad(const Launchpad&) = delete;
     Launchpad& operator=(const Launchpad&) = delete;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// novation::LaunchpadListener
+// ---------------------------------------------------------------------------
+
+namespace novation {
+
+class LaunchpadListener
+{
+public: // public interface
+    virtual void onLaunchpadError(const std::string& message);
+
+    virtual void onLaunchpadInput(const std::string& message);
+
+    virtual void onLaunchpadGridKey(const uint8_t key, const uint8_t velocity);
+
+    virtual void onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity);
+
+protected: // protected interface
+    LaunchpadListener() = default;
+
+    virtual ~LaunchpadListener() = default;
 };
 
 }

@@ -362,8 +362,8 @@ bool Application::loop()
             }
             break;
     }
-    if(_lpLaunchpadPtr) {
-        _lpLaunchpadPtr->setListener(this);
+    if(_lpLaunchpadPtr && _lpCommandPtr) {
+        _lpLaunchpadPtr->setListener(_lpCommandPtr.get());
     }
     if(_lpCommandPtr) {
         _lpCommandPtr->execute();
@@ -418,20 +418,6 @@ void Application::onSIGINTR()
 void Application::onSIGHGUP()
 {
     stop();
-}
-
-void Application::onLaunchpadError(const std::string& message)
-{
-    if(_lpCommandPtr) {
-        _lpCommandPtr->onError(message);
-    }
-}
-
-void Application::onLaunchpadInput(const std::string& message)
-{
-    if(_lpCommandPtr) {
-        _lpCommandPtr->onInput(message);
-    }
 }
 
 // ---------------------------------------------------------------------------

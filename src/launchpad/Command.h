@@ -55,6 +55,7 @@ enum class CommandType
 // ---------------------------------------------------------------------------
 
 class Command
+    : public LaunchpadListener
 {
 public: // public interface
     Command ( const Console&     console
@@ -68,10 +69,6 @@ public: // public interface
     virtual ~Command();
 
     virtual void execute() = 0;
-
-    virtual void onError(const std::string& message);
-
-    virtual void onInput(const std::string& message);
 
     void stop()
     {
@@ -332,9 +329,9 @@ public: // public interface
 
     virtual void execute() override;
 
-    virtual void onError(const std::string& message) override;
+    virtual void onLaunchpadGridKey(const uint8_t key, const uint8_t velocity) override;
 
-    virtual void onInput(const std::string& message) override;
+    virtual void onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity) override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 150UL * 1000UL;
@@ -412,9 +409,9 @@ public: // public interface
 
     virtual void execute() override;
 
-    virtual void onError(const std::string& message) override;
+    virtual void onLaunchpadGridKey(const uint8_t key, const uint8_t velocity) override;
 
-    virtual void onInput(const std::string& message) override;
+    virtual void onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity) override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 750UL * 1000UL;

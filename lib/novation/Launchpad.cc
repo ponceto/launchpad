@@ -95,6 +95,50 @@ struct lp
 }
 
 // ---------------------------------------------------------------------------
+// novation::LaunchpadListener
+// ---------------------------------------------------------------------------
+
+namespace novation {
+
+void LaunchpadListener::onLaunchpadError(const std::string& message)
+{
+}
+
+void LaunchpadListener::onLaunchpadInput(const std::string& message)
+{
+    constexpr uint8_t GRID_KEY = Midi::CHANNEL_01_NOTE_ON;
+    constexpr uint8_t LIVE_KEY = Midi::CHANNEL_01_CONTROL_CHANGE;
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(message.data());
+    const size_t   size = message.size();
+
+    if(size == 3) {
+        const uint8_t msg = data[0];
+        const uint8_t key = data[1];
+        const uint8_t val = data[2];
+        if(msg == GRID_KEY) {
+            onLaunchpadGridKey(key, val);
+        }
+        else if(msg == LIVE_KEY) {
+            onLaunchpadLiveKey(key, val);
+        }
+    }
+}
+
+void LaunchpadListener::onLaunchpadGridKey(const uint8_t key, const uint8_t velocity)
+{
+    static_cast<void>(key);
+    static_cast<void>(velocity);
+}
+
+void LaunchpadListener::onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity)
+{
+    static_cast<void>(key);
+    static_cast<void>(velocity);
+}
+
+}
+
+// ---------------------------------------------------------------------------
 // novation::Launchpad
 // ---------------------------------------------------------------------------
 

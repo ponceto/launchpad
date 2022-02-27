@@ -34,7 +34,6 @@ using Program = base::Program;
 
 class Application final
     : public Program
-    , public LaunchpadListener
 {
 public: // public interface
     Application ( const ArgList& arglist
@@ -54,9 +53,6 @@ public: // public interface
     virtual void onSIGTERM() override;
     virtual void onSIGINTR() override;
     virtual void onSIGHGUP() override;
-
-    virtual void onLaunchpadError(const std::string& message) override;
-    virtual void onLaunchpadInput(const std::string& message) override;
 
 private: // private interface
     bool init();

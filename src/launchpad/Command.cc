@@ -180,14 +180,6 @@ Command::~Command()
 {
 }
 
-void Command::onError(const std::string& message)
-{
-}
-
-void Command::onInput(const std::string& message)
-{
-}
-
 void Command::println(const std::string& message)
 {
     if(_console.printStream.good()) {
@@ -728,26 +720,19 @@ void MatrixCmd::execute()
     }
 }
 
-void MatrixCmd::onError(const std::string& message)
+void MatrixCmd::onLaunchpadGridKey(const uint8_t key, const uint8_t velocity)
 {
+    const uint8_t row = key / 16;
+    const uint8_t col = key % 16;
+    if((row < ROWS) && (col < COLS)) {
+        _matrix.data[row % ROWS][col % COLS] = Cell::kLEVEL5;
+    }
 }
 
-void MatrixCmd::onInput(const std::string& message)
+void MatrixCmd::onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity)
 {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(message.data());
-    const size_t   size = message.size();
-
-    if((size == 3) && (data[0] == 0x90)) {
-        const uint8_t key = data[1];
-        const uint8_t val = data[2];
-        if(val != 0x00) {
-            const uint8_t row = key / 16;
-            const uint8_t col = key % 16;
-            if((row < ROWS) && (col < COLS)) {
-                _matrix.data[row % ROWS][col % COLS] = Cell::kLEVEL5;
-            }
-        }
-    }
+    static_cast<void>(key);
+    static_cast<void>(velocity);
 }
 
 void MatrixCmd::init()
@@ -900,26 +885,20 @@ void GameOfLifeCmd::execute()
     }
 }
 
-void GameOfLifeCmd::onError(const std::string& message)
+void GameOfLifeCmd::onLaunchpadGridKey(const uint8_t key, const uint8_t velocity)
 {
+    const uint8_t row = key / 16;
+    const uint8_t col = key % 16;
+
+    if((row < ROWS) && (col < COLS)) {
+        _world.data[row % ROWS][col % COLS] = Cell::kALIVE;
+    }
 }
 
-void GameOfLifeCmd::onInput(const std::string& message)
+void GameOfLifeCmd::onLaunchpadLiveKey(const uint8_t key, const uint8_t velocity)
 {
-    const uint8_t* data = reinterpret_cast<const uint8_t*>(message.data());
-    const size_t   size = message.size();
-
-    if((size == 3) && (data[0] == 0x90)) {
-        const uint8_t key = data[1];
-        const uint8_t val = data[2];
-        if(val != 0x00) {
-            const uint8_t row = key / 16;
-            const uint8_t col = key % 16;
-            if((row < ROWS) && (col < COLS)) {
-                _world.data[row % ROWS][col % COLS] = Cell::kALIVE;
-            }
-        }
-    }
+    static_cast<void>(key);
+    static_cast<void>(velocity);
 }
 
 void GameOfLifeCmd::init()
@@ -972,8 +951,6 @@ void GameOfLifeCmd::init()
 
 void GameOfLifeCmd::loop()
 {
-    bool stable = true;
-
     auto stateOrDeath = [&](const Cell cell, const uint8_t neighbors) -> Cell
     {
         if((neighbors <= 1) || (neighbors >= 4)) {
@@ -1069,18 +1046,12 @@ void GameOfLifeCmd::loop()
                 const Cell& prev(_cache.get(row, col));
                 Cell&       cell(_world.get(row, col));
                 cell = mutate(prev, neighbors(row, col));
-                if(cell != prev) {
-                    stable = false;
-                }
             }
         }
     };
 
     auto finalize = [&]() -> void
     {
-    //  if(stable != false) {
-    //      init();
-    //  }
     };
 
     display();
