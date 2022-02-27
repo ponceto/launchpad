@@ -180,6 +180,14 @@ Command::~Command()
 {
 }
 
+void Command::onError(const std::string& message)
+{
+}
+
+void Command::onInput(const std::string& message)
+{
+}
+
 void Command::println(const std::string& message)
 {
     if(_console.printStream.good()) {
@@ -701,6 +709,28 @@ void GameOfLifeCmd::execute()
     }
 }
 
+void GameOfLifeCmd::onError(const std::string& message)
+{
+}
+
+void GameOfLifeCmd::onInput(const std::string& message)
+{
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(message.data());
+    const size_t   size = message.size();
+
+    if((size == 3) && (data[0] == 0x90)) {
+        const uint8_t key = data[1];
+        const uint8_t val = data[2];
+        if(val != 0x00) {
+            const uint8_t row = key / 16;
+            const uint8_t col = key % 16;
+            if((row < ROWS) && (col < COLS)) {
+                _world.data[row % ROWS][col % COLS] = Cell::kALIVE;
+            }
+        }
+    }
+}
+
 void GameOfLifeCmd::init()
 {
     auto set = [&](const uint8_t row, const uint8_t col, const Cell state) -> void
@@ -857,9 +887,9 @@ void GameOfLifeCmd::loop()
 
     auto finalize = [&]() -> void
     {
-        if(stable != false) {
-            init();
-        }
+    //  if(stable != false) {
+    //      init();
+    //  }
         if(_stop == false) {
             sleep(_delay);
         }

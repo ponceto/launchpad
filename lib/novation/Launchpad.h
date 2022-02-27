@@ -20,6 +20,26 @@
 #include <novation/Midi.h>
 
 // ---------------------------------------------------------------------------
+// novation::LaunchpadListener
+// ---------------------------------------------------------------------------
+
+namespace novation {
+
+class LaunchpadListener
+{
+public: // public interface
+    virtual void onLaunchpadError(const std::string& message) = 0;
+
+    virtual void onLaunchpadInput(const std::string& message) = 0;
+
+protected: // protected interface
+    LaunchpadListener() = default;
+    virtual ~LaunchpadListener() = default;
+};
+
+}
+
+// ---------------------------------------------------------------------------
 // novation::Launchpad
 // ---------------------------------------------------------------------------
 
@@ -64,6 +84,8 @@ public: // public interface
 
     virtual int enumerateOutputs(std::vector<std::string>& outputs);
 
+    virtual void setListener(LaunchpadListener* listener);
+
 public: // public static data
     static const uint8_t ROWS = 8;
     static const uint8_t COLS = 8;
@@ -74,8 +96,9 @@ public: // public static data
     static const uint8_t BRIGHTNESS_FULL   = 0b11111111;
 
 protected: // protected data
-    const std::string _name;
-    const MidiAdapter _midi;
+    LaunchpadListener* _listener;
+    const std::string  _name;
+    const MidiAdapter  _midi;
 
 private: // disable copy and assignment
     Launchpad(const Launchpad&) = delete;

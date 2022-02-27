@@ -74,6 +74,22 @@ struct lp
                             ;
         return color;
     }
+
+    static void errorCallback(RtMidiError::Type type, const std::string& message, void* userData)
+    {
+        novation::LaunchpadListener* listener(reinterpret_cast<novation::LaunchpadListener*>(userData));
+        if(listener != nullptr) {
+            listener->onLaunchpadError(message);
+        }
+    }
+
+    static void inputCallback(double deltatime, std::vector<unsigned char>* message, void* userData)
+    {
+        novation::LaunchpadListener* listener(reinterpret_cast<novation::LaunchpadListener*>(userData));
+        if(listener != nullptr) {
+            listener->onLaunchpadInput(std::string(message->begin(), message->end()));
+        }
+    }
 };
 
 }
@@ -85,7 +101,8 @@ struct lp
 namespace novation {
 
 Launchpad::Launchpad(const std::string& name)
-    : _name(name)
+    : _listener(nullptr)
+    , _name(name)
     , _midi(name)
 {
 }
@@ -217,6 +234,16 @@ int Launchpad::enumerateOutputs(std::vector<std::string>& outputs)
     Midi::enumerate(*(_midi.out), outputs);
 
     return outputs.size();
+}
+
+void Launchpad::setListener(LaunchpadListener* listener)
+{
+    if((_listener = listener) != nullptr) {
+        _midi.in->setCallback(&lp::inputCallback, _listener);
+    }
+    else {
+        _midi.in->cancelCallback();
+    }
 }
 
 }

@@ -28,6 +28,7 @@
 
 using Console            = base::Console;
 using Launchpad          = novation::Launchpad;
+using LaunchpadListener  = novation::LaunchpadListener;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
 using Font5x7            = novation::Font5x7;
 using Font8x8            = novation::Font8x8;
@@ -66,6 +67,10 @@ public: // public interface
     virtual ~Command();
 
     virtual void execute() = 0;
+
+    virtual void onError(const std::string& message);
+
+    virtual void onInput(const std::string& message);
 
     void stop()
     {
@@ -324,6 +329,10 @@ public: // public interface
     virtual ~GameOfLifeCmd();
 
     virtual void execute() override;
+
+    virtual void onError(const std::string& message) override;
+
+    virtual void onInput(const std::string& message) override;
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 750UL * 1000UL;
