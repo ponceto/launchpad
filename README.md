@@ -309,7 +309,7 @@ You can display a Matrix-like rain effect with this command:
 ```
 Usage: launchpad [options] matrix
 
-Matrix-like rain effect
+Display a Matrix-like rain effect
 
 Arguments:
 

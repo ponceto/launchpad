@@ -431,7 +431,7 @@ void HelpCmd::matrixHelp(std::ostream& stream)
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] matrix"                  << std::endl;
         stream << ""                                                                  << std::endl;
-        stream << "Matrix-like rain effect"                                           << std::endl;
+        stream << "Display a Matrix-like rain effect"                                 << std::endl;
         stream << ""                                                                  << std::endl;
         stream << "Arguments:"                                                        << std::endl;
         stream << ""                                                                  << std::endl;
