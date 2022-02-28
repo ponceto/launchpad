@@ -23,30 +23,47 @@
 
 namespace base {
 
-struct ArgList
+class ArgList
 {
+public: // public interface
+    ArgList()
+        : _arglist()
+    {
+    }
+
     ArgList ( int   argc
             , char* argv[] )
-        : arguments(argv, argv + argc)
+        : _arglist(argv, argv + argc)
     {
     }
 
     auto begin() const -> auto
     {
-        return arguments.begin();
+        return _arglist.begin();
     }
 
     auto end() const -> auto
     {
-        return arguments.end();
+        return _arglist.end();
+    }
+
+    auto count() const -> auto
+    {
+        return _arglist.size();
     }
 
     auto at(unsigned int index) const -> auto
     {
-        return arguments.at(index);
+        return _arglist.at(index);
     }
 
-    std::vector<std::string> arguments;
+    auto add(const std::string& argument)
+    {
+        _arglist.push_back(argument);
+    }
+
+private: // private data
+    std::vector<std::string> _arglist;
 };
 
 }

@@ -158,6 +158,7 @@ Application::Application ( const ArgList& arglist
      , _lpCommandType(CommandType::kNONE)
      , _lpLaunchpadPtr()
      , _lpCommandPtr()
+     , _lpArguments()
      , _lpName("Launchpad Mini")
      , _lpInput(_lpName)
      , _lpOutput(_lpName)
@@ -268,18 +269,22 @@ bool Application::parseArgument(const std::string& argument)
         return false;
     }
     else if(_lpParam1.empty()) {
+        _lpArguments.add(argument);
         _lpParam1 = argument;
         return true;
     }
     else if(_lpParam2.empty()) {
+        _lpArguments.add(argument);
         _lpParam2 = argument;
         return true;
     }
     else if(_lpParam3.empty()) {
+        _lpArguments.add(argument);
         _lpParam3 = argument;
         return true;
     }
     else if(_lpParam4.empty()) {
+        _lpArguments.add(argument);
         _lpParam4 = argument;
         return true;
     }
@@ -316,60 +321,54 @@ bool Application::loop()
         case CommandType::kHELP:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName);
-                _lpCommandPtr   = std::make_unique<launchpad::HelpCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
+                _lpCommandPtr   = std::make_unique<launchpad::HelpCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay), _lpProgram, _lpInput, _lpOutput);
             }
             break;
         case CommandType::kLIST:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName);
-                _lpCommandPtr   = std::make_unique<launchpad::ListCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::ListCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kRESET:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::ResetCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::ResetCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kCYCLE:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::CycleCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::CycleCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kPRINT:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::PrintCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::PrintCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kSCROLL:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::ScrollCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::ScrollCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kMATRIX:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::MatrixCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::MatrixCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
         case CommandType::kGAMEOFLIFE:
             {
                 _lpLaunchpadPtr = std::make_unique<Launchpad>(_lpName, _lpInput, _lpOutput);
-                _lpCommandPtr   = std::make_unique<launchpad::GameOfLifeCmd>(_console, *_lpLaunchpadPtr, _lpParam1, _lpParam2, _lpParam3, _lpParam4, arg::delay(_lpDelay));
+                _lpCommandPtr   = std::make_unique<launchpad::GameOfLifeCmd>(_lpArguments, _console, *_lpLaunchpadPtr, arg::delay(_lpDelay));
             }
             break;
     }
-    if(_lpLaunchpadPtr && _lpCommandPtr) {
-        _lpLaunchpadPtr->setListener(_lpCommandPtr.get());
-    }
     if(_lpCommandPtr) {
         _lpCommandPtr->execute();
-    }
-    if(_lpLaunchpadPtr) {
-        _lpLaunchpadPtr->setListener(nullptr);
     }
     return true;
 }

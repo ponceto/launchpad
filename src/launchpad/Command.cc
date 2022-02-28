@@ -56,6 +56,14 @@ struct lp
         kUNSET = 2,
     };
 
+    static uint64_t check_delay(const uint64_t delay, const uint64_t default_delay)
+    {
+        if(delay == 0UL) {
+            return default_delay;
+        }
+        return delay;
+    }
+
     static void assert_argument(const std::string& argument, const int expected)
     {
         switch(expected) {
@@ -151,22 +159,63 @@ struct lp
 }
 
 // ---------------------------------------------------------------------------
+// AbstractCommand
+// ---------------------------------------------------------------------------
+
+AbstractCommand::AbstractCommand(const Console& console)
+    : _arglist()
+    , _console(console)
+{
+}
+
+AbstractCommand::AbstractCommand(const ArgList& arglist, const Console& console)
+    : _arglist(arglist)
+    , _console(console)
+{
+}
+
+AbstractCommand::~AbstractCommand()
+{
+}
+
+void AbstractCommand::println(const std::string& message)
+{
+    if(_console.printStream.good()) {
+        _console.printStream << message << std::endl;
+    }
+}
+
+void AbstractCommand::println(const std::string& prefix, const std::string& message)
+{
+    if(_console.printStream.good()) {
+        _console.printStream << prefix << ' ' << message << std::endl;
+    }
+}
+
+void AbstractCommand::errorln(const std::string& message)
+{
+    if(_console.errorStream.good()) {
+        _console.errorStream << message << std::endl;
+    }
+}
+
+void AbstractCommand::errorln(const std::string& prefix, const std::string& message)
+{
+    if(_console.errorStream.good()) {
+        _console.errorStream << prefix << ' ' << message << std::endl;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Command
 // ---------------------------------------------------------------------------
 
-Command::Command ( const Console&     console
+Command::Command ( const ArgList&     arglist
+                 , const Console&     console
                  , Launchpad&         launchpad
-                 , const std::string& argument1
-                 , const std::string& argument2
-                 , const std::string& argument3
-                 , const std::string& argument4
                  , const uint64_t     delay )
-    : _console(console)
+    : AbstractCommand(arglist, console)
     , _launchpad(launchpad)
-    , _argument1(argument1)
-    , _argument2(argument2)
-    , _argument3(argument3)
-    , _argument4(argument4)
     , _delay(delay)
     , _black(_launchpad.makeColor(0, 0))
     , _red(_launchpad.makeColor(255, 0))
@@ -174,38 +223,12 @@ Command::Command ( const Console&     console
     , _amber(_launchpad.makeColor(255, 255))
     , _stop(false)
 {
+    _launchpad.setListener(this);
 }
 
 Command::~Command()
 {
-}
-
-void Command::println(const std::string& message)
-{
-    if(_console.printStream.good()) {
-        _console.printStream << message << std::endl;
-    }
-}
-
-void Command::println(const std::string& prefix, const std::string& message)
-{
-    if(_console.printStream.good()) {
-        _console.printStream << prefix << ' ' << message << std::endl;
-    }
-}
-
-void Command::errorln(const std::string& message)
-{
-    if(_console.errorStream.good()) {
-        _console.errorStream << message << std::endl;
-    }
-}
-
-void Command::errorln(const std::string& prefix, const std::string& message)
-{
-    if(_console.errorStream.good()) {
-        _console.errorStream << prefix << ' ' << message << std::endl;
-    }
+    _launchpad.setListener(nullptr);
 }
 
 void Command::sleep(const uint64_t delay)
@@ -219,17 +242,14 @@ void Command::sleep(const uint64_t delay)
 
 namespace launchpad {
 
-HelpCmd::HelpCmd ( const Console&     console
+HelpCmd::HelpCmd ( const ArgList&     arglist
+                 , const Console&     console
                  , Launchpad&         launchpad
-                 , const std::string& argument1
-                 , const std::string& argument2
-                 , const std::string& argument3
-                 , const std::string& argument4
                  , const uint64_t     delay
                  , const std::string& program
                  , const std::string& midiIn
                  , const std::string& midiOut )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, delay)
+    : Command(arglist, console, launchpad, delay)
     , _program(program)
     , _midiIn(midiIn)
     , _midiOut(midiOut)
@@ -242,36 +262,41 @@ HelpCmd::~HelpCmd()
 
 void HelpCmd::execute()
 {
-    if(_argument1.empty()) {
-        baseHelp(_console.printStream);
+    std::string command;
+
+    if(_arglist.count() > 0) {
+        command = _arglist.at(0);
+    }
+    if(command.empty()) {
+        baseUsage(_console.printStream);
         launchpad(_console.printStream);
     }
-    else if(_argument1 == "help") {
-        helpHelp(_console.printStream);
+    else if(command == "help") {
+        helpUsage(_console.printStream);
     }
-    else if(_argument1 == "list") {
-        listHelp(_console.printStream);
+    else if(command == "list") {
+        listUsage(_console.printStream);
     }
-    else if(_argument1 == "reset") {
-        resetHelp(_console.printStream);
+    else if(command == "reset") {
+        resetUsage(_console.printStream);
     }
-    else if(_argument1 == "cycle") {
-        cycleHelp(_console.printStream);
+    else if(command == "cycle") {
+        cycleUsage(_console.printStream);
     }
-    else if(_argument1 == "print") {
-        printHelp(_console.printStream);
+    else if(command == "print") {
+        printUsage(_console.printStream);
     }
-    else if(_argument1 == "scroll") {
-        scrollHelp(_console.printStream);
+    else if(command == "scroll") {
+        scrollUsage(_console.printStream);
     }
-    else if(_argument1 == "matrix") {
-        matrixHelp(_console.printStream);
+    else if(command == "matrix") {
+        matrixUsage(_console.printStream);
     }
-    else if(_argument1 == "gameoflife") {
-        gameoflifeHelp(_console.printStream);
+    else if(command == "gameoflife") {
+        gameoflifeUsage(_console.printStream);
     }
     else {
-        throw std::runtime_error(std::string("no help for") + ' ' + '<' + _argument1 + '>');
+        throw std::runtime_error(std::string("no help for") + ' ' + '<' + command + '>');
     }
 }
 
@@ -299,7 +324,7 @@ void HelpCmd::launchpad(std::ostream& stream)
     }
 }
 
-void HelpCmd::baseHelp(std::ostream& stream)
+void HelpCmd::baseUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] <command> [<args>]"      << std::endl;
@@ -334,7 +359,7 @@ void HelpCmd::baseHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::helpHelp(std::ostream& stream)
+void HelpCmd::helpUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] help [{command}]"        << std::endl;
@@ -348,7 +373,7 @@ void HelpCmd::helpHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::listHelp(std::ostream& stream)
+void HelpCmd::listUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] list"                    << std::endl;
@@ -362,7 +387,7 @@ void HelpCmd::listHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::resetHelp(std::ostream& stream)
+void HelpCmd::resetUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] reset"                   << std::endl;
@@ -376,7 +401,7 @@ void HelpCmd::resetHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::cycleHelp(std::ostream& stream)
+void HelpCmd::cycleUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] cycle"                   << std::endl;
@@ -390,7 +415,7 @@ void HelpCmd::cycleHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::printHelp(std::ostream& stream)
+void HelpCmd::printUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] print {message}"         << std::endl;
@@ -404,7 +429,7 @@ void HelpCmd::printHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::scrollHelp(std::ostream& stream)
+void HelpCmd::scrollUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] scroll {message}"        << std::endl;
@@ -418,7 +443,7 @@ void HelpCmd::scrollHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::matrixHelp(std::ostream& stream)
+void HelpCmd::matrixUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] matrix"                  << std::endl;
@@ -432,7 +457,7 @@ void HelpCmd::matrixHelp(std::ostream& stream)
     }
 }
 
-void HelpCmd::gameoflifeHelp(std::ostream& stream)
+void HelpCmd::gameoflifeUsage(std::ostream& stream)
 {
     if(stream.good()) {
         stream << "Usage: " << _program << ' ' << "[options] gameoflife {pattern}"    << std::endl;
@@ -457,19 +482,12 @@ void HelpCmd::gameoflifeHelp(std::ostream& stream)
 
 namespace launchpad {
 
-ListCmd::ListCmd ( const Console&     console
-                 , Launchpad&         launchpad
-                 , const std::string& argument1
-                 , const std::string& argument2
-                 , const std::string& argument3
-                 , const std::string& argument4
-                 , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, delay)
+ListCmd::ListCmd ( const ArgList& arglist
+                 , const Console& console
+                 , Launchpad&     launchpad
+                 , const uint64_t delay )
+    : Command(arglist, console, launchpad, delay)
 {
-    lp::assert_argument(argument1, lp::kUNSET);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
 }
 
 ListCmd::~ListCmd()
@@ -518,19 +536,12 @@ void ListCmd::listOutputs()
 
 namespace launchpad {
 
-ResetCmd::ResetCmd ( const Console&     console
-                   , Launchpad&         launchpad
-                   , const std::string& argument1
-                   , const std::string& argument2
-                   , const std::string& argument3
-                   , const std::string& argument4
-                   , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+ResetCmd::ResetCmd ( const ArgList& arglist
+                   , const Console& console
+                   , Launchpad&     launchpad
+                   , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
 {
-    lp::assert_argument(argument1, lp::kUNSET);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
 }
 
 ResetCmd::~ResetCmd()
@@ -550,19 +561,12 @@ void ResetCmd::execute()
 
 namespace launchpad {
 
-CycleCmd::CycleCmd ( const Console&     console
-                   , Launchpad&         launchpad
-                   , const std::string& argument1
-                   , const std::string& argument2
-                   , const std::string& argument3
-                   , const std::string& argument4
-                   , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+CycleCmd::CycleCmd ( const ArgList& arglist
+                   , const Console& console
+                   , Launchpad&     launchpad
+                   , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
 {
-    lp::assert_argument(argument1, lp::kUNSET);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
 }
 
 CycleCmd::~CycleCmd()
@@ -616,19 +620,19 @@ void CycleCmd::execute()
 
 namespace launchpad {
 
-PrintCmd::PrintCmd ( const Console&     console
-                   , Launchpad&         launchpad
-                   , const std::string& argument1
-                   , const std::string& argument2
-                   , const std::string& argument3
-                   , const std::string& argument4
-                   , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+PrintCmd::PrintCmd ( const ArgList& arglist
+                   , const Console& console
+                   , Launchpad&     launchpad
+                   , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    , _text()
 {
-    lp::assert_argument(argument1, lp::kSET);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
+    if(_arglist.count() != 1) {
+        throw std::runtime_error("invalid argument count");
+    }
+    else {
+        _text = _arglist.at(0);
+    }
 }
 
 PrintCmd::~PrintCmd()
@@ -638,7 +642,7 @@ PrintCmd::~PrintCmd()
 
 void PrintCmd::execute()
 {
-    lp::print(_launchpad, _argument1, _red, _black, _delay, _stop);
+    lp::print(_launchpad, _text, _red, _black, _delay, _stop);
 }
 
 }
@@ -649,19 +653,19 @@ void PrintCmd::execute()
 
 namespace launchpad {
 
-ScrollCmd::ScrollCmd ( const Console&     console
-                     , Launchpad&         launchpad
-                     , const std::string& argument1
-                     , const std::string& argument2
-                     , const std::string& argument3
-                     , const std::string& argument4
-                     , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+ScrollCmd::ScrollCmd ( const ArgList& arglist
+                     , const Console& console
+                     , Launchpad&     launchpad
+                     , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    , _text()
 {
-    lp::assert_argument(argument1, lp::kSET);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
+    if(_arglist.count() != 1) {
+        throw std::runtime_error("invalid argument count");
+    }
+    else {
+        _text = _arglist.at(0);
+    }
 }
 
 ScrollCmd::~ScrollCmd()
@@ -671,7 +675,7 @@ ScrollCmd::~ScrollCmd()
 
 void ScrollCmd::execute()
 {
-    lp::scroll(_launchpad, _argument1, _red, _black, _delay, _stop);
+    lp::scroll(_launchpad, _text, _red, _black, _delay, _stop);
 }
 
 }
@@ -682,14 +686,11 @@ void ScrollCmd::execute()
 
 namespace launchpad {
 
-MatrixCmd::MatrixCmd ( const Console&     console
-                     , Launchpad&         launchpad
-                     , const std::string& argument1
-                     , const std::string& argument2
-                     , const std::string& argument3
-                     , const std::string& argument4
-                     , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+MatrixCmd::MatrixCmd ( const ArgList& arglist
+                     , const Console& console
+                     , Launchpad&     launchpad
+                     , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
     , _color0(_launchpad.makeColor(0, 0))
     , _color1(_launchpad.makeColor(0, 85))
     , _color2(_launchpad.makeColor(0, 170))
@@ -698,10 +699,9 @@ MatrixCmd::MatrixCmd ( const Console&     console
     , _color5(_launchpad.makeColor(255, 0))
     , _matrix()
 {
-    lp::assert_argument(argument1, lp::kANY);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
+    if(_arglist.count() != 0) {
+        throw std::runtime_error("invalid argument count");
+    }
 }
 
 MatrixCmd::~MatrixCmd()
@@ -847,14 +847,12 @@ void MatrixCmd::wait()
 
 namespace launchpad {
 
-GameOfLifeCmd::GameOfLifeCmd ( const Console&     console
-                             , Launchpad&         launchpad
-                             , const std::string& argument1
-                             , const std::string& argument2
-                             , const std::string& argument3
-                             , const std::string& argument4
-                             , const uint64_t     delay )
-    : Command(console, launchpad, argument1, argument2, argument3, argument4, checkDelay(delay, DEFAULT_DELAY))
+GameOfLifeCmd::GameOfLifeCmd ( const ArgList& arglist
+                             , const Console& console
+                             , Launchpad&     launchpad
+                             , const uint64_t delay )
+    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    , _variant()
     , _color0(_launchpad.makeColor(0, 0))
     , _color1(_launchpad.makeColor(64, 0))
     , _color2(_launchpad.makeColor(255, 0))
@@ -863,10 +861,15 @@ GameOfLifeCmd::GameOfLifeCmd ( const Console&     console
     , _world()
     , _cache()
 {
-    lp::assert_argument(argument1, lp::kANY);
-    lp::assert_argument(argument2, lp::kUNSET);
-    lp::assert_argument(argument3, lp::kUNSET);
-    lp::assert_argument(argument4, lp::kUNSET);
+    if(_arglist.count() == 0) {
+        /* default */
+    }
+    else if(_arglist.count() == 1) {
+        _variant = _arglist.at(0);
+    }
+    else {
+        throw std::runtime_error("invalid argument count");
+    }
 }
 
 GameOfLifeCmd::~GameOfLifeCmd()
@@ -935,17 +938,17 @@ void GameOfLifeCmd::init()
         set((row + 1), (col + 1), Cell::kALIVE);
     };
 
-    if(_argument1.empty()) {
+    if(_variant.empty()) {
         init_random();
     }
-    else if(_argument1 == "random") {
+    else if(_variant == "random") {
         init_random();
     }
-    else if(_argument1 == "glider") {
+    else if(_variant == "glider") {
         init_glider(1, 1);
     }
     else {
-        throw std::runtime_error(std::string("invalid pattern") + ' ' + '<' + _argument1 + '>');
+        throw std::runtime_error(std::string("invalid pattern") + ' ' + '<' + _variant + '>');
     }
 }
 

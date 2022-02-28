@@ -17,6 +17,7 @@
 #ifndef __Command_h__
 #define __Command_h__
 
+#include <base/ArgList.h>
 #include <base/Console.h>
 #include <novation/Launchpad.h>
 #include <novation/Font5x7.h>
@@ -26,6 +27,7 @@
 // some aliases
 // ---------------------------------------------------------------------------
 
+using ArgList            = base::ArgList;
 using Console            = base::Console;
 using Launchpad          = novation::Launchpad;
 using LaunchpadListener  = novation::LaunchpadListener;
@@ -51,29 +53,19 @@ enum class CommandType
 };
 
 // ---------------------------------------------------------------------------
-// Command
+// AbstractCommand
 // ---------------------------------------------------------------------------
 
-class Command
-    : public LaunchpadListener
+class AbstractCommand
 {
 public: // public interface
-    Command ( const Console&     console
-            , Launchpad&         launchpad
-            , const std::string& argument1
-            , const std::string& argument2
-            , const std::string& argument3
-            , const std::string& argument4
-            , const uint64_t     delay );
+    AbstractCommand(const Console& console);
 
-    virtual ~Command();
+    AbstractCommand(const ArgList& arglist, const Console& console);
+
+    virtual ~AbstractCommand();
 
     virtual void execute() = 0;
-
-    void stop()
-    {
-        _stop = true;
-    }
 
 protected: // protected interface
     void println(const std::string& message = std::string());
@@ -84,29 +76,42 @@ protected: // protected interface
 
     void errorln(const std::string& prefix, const std::string& message);
 
-    void sleep(const uint64_t delay);
+protected: // protected data
+    const ArgList  _arglist;
+    const Console& _console;
+};
 
-    static uint64_t checkDelay(const uint64_t delay, const uint64_t default_delay)
+// ---------------------------------------------------------------------------
+// Command
+// ---------------------------------------------------------------------------
+
+class Command
+    : public AbstractCommand
+    , public LaunchpadListener
+{
+public: // public interface
+    Command ( const ArgList& arglist
+            , const Console& console
+            , Launchpad&     launchpad
+            , const uint64_t delay );
+
+    virtual ~Command();
+
+    void stop()
     {
-        if(delay == 0UL) {
-            return default_delay;
-        }
-        return delay;
+        _stop = true;
     }
 
+    void sleep(const uint64_t delay);
+
 protected: // protected data
-    const Console&    _console;
-    Launchpad&        _launchpad;
-    const std::string _argument1;
-    const std::string _argument2;
-    const std::string _argument3;
-    const std::string _argument4;
-    const uint64_t    _delay;
-    const uint8_t     _black;
-    const uint8_t     _red;
-    const uint8_t     _green;
-    const uint8_t     _amber;
-    bool              _stop;
+    Launchpad&     _launchpad;
+    const uint64_t _delay;
+    const uint8_t  _black;
+    const uint8_t  _red;
+    const uint8_t  _green;
+    const uint8_t  _amber;
+    bool           _stop;
 };
 
 // ---------------------------------------------------------------------------
@@ -125,12 +130,9 @@ class HelpCmd final
     : public Command
 {
 public: // public interface
-    HelpCmd ( const Console&     console
+    HelpCmd ( const ArgList&     arglist
+            , const Console&     console
             , Launchpad&         launchpad
-            , const std::string& argument1
-            , const std::string& argument2
-            , const std::string& argument3
-            , const std::string& argument4
             , const uint64_t     delay
             , const std::string& program
             , const std::string& midiIn
@@ -145,15 +147,15 @@ private: // private static data
 
 private: // private interface
     void launchpad(std::ostream&);
-    void baseHelp(std::ostream&);
-    void helpHelp(std::ostream&);
-    void listHelp(std::ostream&);
-    void resetHelp(std::ostream&);
-    void cycleHelp(std::ostream&);
-    void printHelp(std::ostream&);
-    void scrollHelp(std::ostream&);
-    void matrixHelp(std::ostream&);
-    void gameoflifeHelp(std::ostream&);
+    void baseUsage(std::ostream&);
+    void helpUsage(std::ostream&);
+    void listUsage(std::ostream&);
+    void resetUsage(std::ostream&);
+    void cycleUsage(std::ostream&);
+    void printUsage(std::ostream&);
+    void scrollUsage(std::ostream&);
+    void matrixUsage(std::ostream&);
+    void gameoflifeUsage(std::ostream&);
 
 private: // private data
     const std::string _program;
@@ -173,13 +175,10 @@ class ListCmd final
     : public Command
 {
 public: // public interface
-    ListCmd ( const Console&     console
-            , Launchpad&         launchpad
-            , const std::string& argument1
-            , const std::string& argument2
-            , const std::string& argument3
-            , const std::string& argument4
-            , const uint64_t     delay );
+    ListCmd ( const ArgList& arglist
+            , const Console& console
+            , Launchpad&     launchpad
+            , const uint64_t delay );
 
     virtual ~ListCmd();
 
@@ -205,13 +204,10 @@ class ResetCmd final
     : public Command
 {
 public: // public interface
-    ResetCmd ( const Console&     console
-             , Launchpad&         launchpad
-             , const std::string& argument1
-             , const std::string& argument2
-             , const std::string& argument3
-             , const std::string& argument4
-             , const uint64_t     delay );
+    ResetCmd ( const ArgList& arglist
+             , const Console& console
+             , Launchpad&     launchpad
+             , const uint64_t delay );
 
     virtual ~ResetCmd();
 
@@ -233,13 +229,10 @@ class CycleCmd final
     : public Command
 {
 public: // public interface
-    CycleCmd ( const Console&     console
-             , Launchpad&         launchpad
-             , const std::string& argument1
-             , const std::string& argument2
-             , const std::string& argument3
-             , const std::string& argument4
-             , const uint64_t     delay );
+    CycleCmd ( const ArgList& arglist
+             , const Console& console
+             , Launchpad&     launchpad
+             , const uint64_t delay );
 
     virtual ~CycleCmd();
 
@@ -261,13 +254,10 @@ class PrintCmd final
     : public Command
 {
 public: // public interface
-    PrintCmd ( const Console&     console
-             , Launchpad&         launchpad
-             , const std::string& argument1
-             , const std::string& argument2
-             , const std::string& argument3
-             , const std::string& argument4
-             , const uint64_t     delay );
+    PrintCmd ( const ArgList& arglist
+             , const Console& console
+             , Launchpad&     launchpad
+             , const uint64_t delay );
 
     virtual ~PrintCmd();
 
@@ -275,6 +265,9 @@ public: // public interface
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 250UL * 1000UL;
+
+private: // private data
+    std::string _text;
 };
 
 }
@@ -289,13 +282,10 @@ class ScrollCmd final
     : public Command
 {
 public: // public interface
-    ScrollCmd ( const Console&     console
-              , Launchpad&         launchpad
-              , const std::string& argument1
-              , const std::string& argument2
-              , const std::string& argument3
-              , const std::string& argument4
-              , const uint64_t     delay );
+    ScrollCmd ( const ArgList& arglist
+              , const Console& console
+              , Launchpad&     launchpad
+              , const uint64_t delay );
 
     virtual ~ScrollCmd();
 
@@ -303,6 +293,9 @@ public: // public interface
 
 private: // private static data
     static constexpr uint64_t DEFAULT_DELAY = 125UL * 1000UL;
+
+private: // private data
+    std::string _text;
 };
 
 }
@@ -317,13 +310,10 @@ class MatrixCmd final
     : public Command
 {
 public: // public interface
-    MatrixCmd ( const Console&     console
-              , Launchpad&         launchpad
-              , const std::string& argument1
-              , const std::string& argument2
-              , const std::string& argument3
-              , const std::string& argument4
-              , const uint64_t     delay );
+    MatrixCmd ( const ArgList& arglist
+              , const Console& console
+              , Launchpad&     launchpad
+              , const uint64_t delay );
 
     virtual ~MatrixCmd();
 
@@ -397,13 +387,10 @@ class GameOfLifeCmd final
     : public Command
 {
 public: // public interface
-    GameOfLifeCmd ( const Console&     console
-                  , Launchpad&         launchpad
-                  , const std::string& argument1
-                  , const std::string& argument2
-                  , const std::string& argument3
-                  , const std::string& argument4
-                  , const uint64_t     delay );
+    GameOfLifeCmd ( const ArgList& arglist
+                  , const Console& console
+                  , Launchpad&     launchpad
+                  , const uint64_t delay );
 
     virtual ~GameOfLifeCmd();
 
@@ -448,6 +435,7 @@ private: // private interface
     void wait();
 
 private: // private data
+    std::string   _variant;
     const uint8_t _color0;
     const uint8_t _color1;
     const uint8_t _color2;

@@ -17,6 +17,8 @@
 #ifndef __Application_h__
 #define __Application_h__
 
+#include <base/ArgList.h>
+#include <base/Console.h>
 #include <base/Program.h>
 #include "Command.h"
 
@@ -66,6 +68,7 @@ private: // private data
     CommandType        _lpCommandType;
     LaunchpadUniquePtr _lpLaunchpadPtr;
     CommandUniquePtr   _lpCommandPtr;
+    ArgList            _lpArguments;
     std::string        _lpName;
     std::string        _lpInput;
     std::string        _lpOutput;
