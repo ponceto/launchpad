@@ -189,7 +189,8 @@ Command::Command ( Launchpad&     launchpad
                  , const Console& console
                  , const uint64_t delay )
     : AbstractCommand(arglist, console)
-    , _launchpad(launchpad)
+    , LaunchpadDecorator(launchpad)
+    , LaunchpadListener()
     , _delay(delay)
     , _black(_launchpad.makeColor(0, 0))
     , _red(_launchpad.makeColor(255, 0))
@@ -223,7 +224,7 @@ HelpCmd::HelpCmd ( Launchpad&         launchpad
                  , const std::string& program
                  , const std::string& midiIn
                  , const std::string& midiOut )
-    : Command(launchpad, arglist, console, delay)
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
     , _program(program)
     , _midiIn(midiIn)
     , _midiOut(midiOut)
@@ -460,7 +461,7 @@ ListCmd::ListCmd ( Launchpad&     launchpad
                  , const ArgList& arglist
                  , const Console& console
                  , const uint64_t delay )
-    : Command(launchpad, arglist, console, delay)
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
 {
     if(_arglist.count() != 0) {
         throw std::runtime_error("invalid argument count");

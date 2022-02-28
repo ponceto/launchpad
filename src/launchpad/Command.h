@@ -30,6 +30,7 @@
 using ArgList            = base::ArgList;
 using Console            = base::Console;
 using Launchpad          = novation::Launchpad;
+using LaunchpadDecorator = novation::LaunchpadDecorator;
 using LaunchpadListener  = novation::LaunchpadListener;
 using LaunchpadUniquePtr = std::unique_ptr<Launchpad>;
 using Font5x7            = novation::Font5x7;
@@ -87,6 +88,7 @@ protected: // protected data
 
 class Command
     : public AbstractCommand
+    , public LaunchpadDecorator
     , public LaunchpadListener
 {
 public: // public interface
@@ -105,7 +107,6 @@ public: // public interface
     void sleep(const uint64_t delay);
 
 protected: // protected data
-    Launchpad&     _launchpad;
     const uint64_t _delay;
     const uint8_t  _black;
     const uint8_t  _red;

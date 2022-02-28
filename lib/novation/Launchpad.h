@@ -26,6 +26,7 @@
 namespace novation {
 
 class Launchpad;
+class LaunchpadDecorator;
 class LaunchpadListener;
 
 }
@@ -94,6 +95,25 @@ protected: // protected data
 private: // disable copy and assignment
     Launchpad(const Launchpad&) = delete;
     Launchpad& operator=(const Launchpad&) = delete;
+};
+
+}
+
+// ---------------------------------------------------------------------------
+// novation::LaunchpadDecorator
+// ---------------------------------------------------------------------------
+
+namespace novation {
+
+class LaunchpadDecorator
+{
+public: // public interface
+    LaunchpadDecorator(Launchpad& launchpad);
+
+    virtual ~LaunchpadDecorator();
+
+protected: // protected data
+    Launchpad& _launchpad;
 };
 
 }
