@@ -184,10 +184,10 @@ void AbstractCommand::errorln(const std::string& prefix, const std::string& mess
 // Command
 // ---------------------------------------------------------------------------
 
-Command::Command ( const ArgList&     arglist
-                 , const Console&     console
-                 , Launchpad&         launchpad
-                 , const uint64_t     delay )
+Command::Command ( Launchpad&     launchpad
+                 , const ArgList& arglist
+                 , const Console& console
+                 , const uint64_t delay )
     : AbstractCommand(arglist, console)
     , _launchpad(launchpad)
     , _delay(delay)
@@ -216,14 +216,14 @@ void Command::sleep(const uint64_t delay)
 
 namespace launchpad {
 
-HelpCmd::HelpCmd ( const ArgList&     arglist
+HelpCmd::HelpCmd ( Launchpad&         launchpad
+                 , const ArgList&     arglist
                  , const Console&     console
-                 , Launchpad&         launchpad
                  , const uint64_t     delay
                  , const std::string& program
                  , const std::string& midiIn
                  , const std::string& midiOut )
-    : Command(arglist, console, launchpad, delay)
+    : Command(launchpad, arglist, console, delay)
     , _program(program)
     , _midiIn(midiIn)
     , _midiOut(midiOut)
@@ -456,11 +456,11 @@ void HelpCmd::gameoflifeUsage(std::ostream& stream)
 
 namespace launchpad {
 
-ListCmd::ListCmd ( const ArgList& arglist
+ListCmd::ListCmd ( Launchpad&     launchpad
+                 , const ArgList& arglist
                  , const Console& console
-                 , Launchpad&     launchpad
                  , const uint64_t delay )
-    : Command(arglist, console, launchpad, delay)
+    : Command(launchpad, arglist, console, delay)
 {
     if(_arglist.count() != 0) {
         throw std::runtime_error("invalid argument count");
@@ -513,11 +513,11 @@ void ListCmd::listOutputs()
 
 namespace launchpad {
 
-ResetCmd::ResetCmd ( const ArgList& arglist
+ResetCmd::ResetCmd ( Launchpad&     launchpad
+                   , const ArgList& arglist
                    , const Console& console
-                   , Launchpad&     launchpad
                    , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
 {
     if(_arglist.count() != 0) {
         throw std::runtime_error("invalid argument count");
@@ -541,11 +541,11 @@ void ResetCmd::execute()
 
 namespace launchpad {
 
-CycleCmd::CycleCmd ( const ArgList& arglist
+CycleCmd::CycleCmd ( Launchpad&     launchpad
+                   , const ArgList& arglist
                    , const Console& console
-                   , Launchpad&     launchpad
                    , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
 {
     if(_arglist.count() != 0) {
         throw std::runtime_error("invalid argument count");
@@ -603,11 +603,11 @@ void CycleCmd::execute()
 
 namespace launchpad {
 
-PrintCmd::PrintCmd ( const ArgList& arglist
+PrintCmd::PrintCmd ( Launchpad&     launchpad
+                   , const ArgList& arglist
                    , const Console& console
-                   , Launchpad&     launchpad
                    , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
     , _text()
 {
     if(_arglist.count() != 1) {
@@ -636,11 +636,11 @@ void PrintCmd::execute()
 
 namespace launchpad {
 
-ScrollCmd::ScrollCmd ( const ArgList& arglist
+ScrollCmd::ScrollCmd ( Launchpad&     launchpad
+                     , const ArgList& arglist
                      , const Console& console
-                     , Launchpad&     launchpad
                      , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
     , _text()
 {
     if(_arglist.count() != 1) {
@@ -669,11 +669,11 @@ void ScrollCmd::execute()
 
 namespace launchpad {
 
-MatrixCmd::MatrixCmd ( const ArgList& arglist
+MatrixCmd::MatrixCmd ( Launchpad&     launchpad
+                     , const ArgList& arglist
                      , const Console& console
-                     , Launchpad&     launchpad
                      , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
     , _color0(_launchpad.makeColor(0, 0))
     , _color1(_launchpad.makeColor(0, 85))
     , _color2(_launchpad.makeColor(0, 170))
@@ -830,11 +830,11 @@ void MatrixCmd::wait()
 
 namespace launchpad {
 
-GameOfLifeCmd::GameOfLifeCmd ( const ArgList& arglist
+GameOfLifeCmd::GameOfLifeCmd ( Launchpad&     launchpad
+                             , const ArgList& arglist
                              , const Console& console
-                             , Launchpad&     launchpad
                              , const uint64_t delay )
-    : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
+    : Command(launchpad, arglist, console, lp::check_delay(delay, DEFAULT_DELAY))
     , _variant()
     , _color0(_launchpad.makeColor(0, 0))
     , _color1(_launchpad.makeColor(64, 0))

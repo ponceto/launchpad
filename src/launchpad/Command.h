@@ -90,9 +90,9 @@ class Command
     , public LaunchpadListener
 {
 public: // public interface
-    Command ( const ArgList& arglist
+    Command ( Launchpad&     launchpad
+            , const ArgList& arglist
             , const Console& console
-            , Launchpad&     launchpad
             , const uint64_t delay );
 
     virtual ~Command();
@@ -130,9 +130,9 @@ class HelpCmd final
     : public Command
 {
 public: // public interface
-    HelpCmd ( const ArgList&     arglist
+    HelpCmd ( Launchpad&         launchpad
+            , const ArgList&     arglist
             , const Console&     console
-            , Launchpad&         launchpad
             , const uint64_t     delay
             , const std::string& program
             , const std::string& midiIn
@@ -175,9 +175,9 @@ class ListCmd final
     : public Command
 {
 public: // public interface
-    ListCmd ( const ArgList& arglist
+    ListCmd ( Launchpad&     launchpad
+            , const ArgList& arglist
             , const Console& console
-            , Launchpad&     launchpad
             , const uint64_t delay );
 
     virtual ~ListCmd();
@@ -204,9 +204,9 @@ class ResetCmd final
     : public Command
 {
 public: // public interface
-    ResetCmd ( const ArgList& arglist
+    ResetCmd ( Launchpad&     launchpad
+             , const ArgList& arglist
              , const Console& console
-             , Launchpad&     launchpad
              , const uint64_t delay );
 
     virtual ~ResetCmd();
@@ -229,9 +229,9 @@ class CycleCmd final
     : public Command
 {
 public: // public interface
-    CycleCmd ( const ArgList& arglist
+    CycleCmd ( Launchpad&     launchpad
+             , const ArgList& arglist
              , const Console& console
-             , Launchpad&     launchpad
              , const uint64_t delay );
 
     virtual ~CycleCmd();
@@ -254,9 +254,9 @@ class PrintCmd final
     : public Command
 {
 public: // public interface
-    PrintCmd ( const ArgList& arglist
+    PrintCmd ( Launchpad&     launchpad
+             , const ArgList& arglist
              , const Console& console
-             , Launchpad&     launchpad
              , const uint64_t delay );
 
     virtual ~PrintCmd();
@@ -282,9 +282,9 @@ class ScrollCmd final
     : public Command
 {
 public: // public interface
-    ScrollCmd ( const ArgList& arglist
+    ScrollCmd ( Launchpad&     launchpad
+              , const ArgList& arglist
               , const Console& console
-              , Launchpad&     launchpad
               , const uint64_t delay );
 
     virtual ~ScrollCmd();
@@ -310,9 +310,9 @@ class MatrixCmd final
     : public Command
 {
 public: // public interface
-    MatrixCmd ( const ArgList& arglist
+    MatrixCmd ( Launchpad&     launchpad
+              , const ArgList& arglist
               , const Console& console
-              , Launchpad&     launchpad
               , const uint64_t delay );
 
     virtual ~MatrixCmd();
@@ -387,9 +387,9 @@ class GameOfLifeCmd final
     : public Command
 {
 public: // public interface
-    GameOfLifeCmd ( const ArgList& arglist
+    GameOfLifeCmd ( Launchpad&     launchpad
+                  , const ArgList& arglist
                   , const Console& console
-                  , Launchpad&     launchpad
                   , const uint64_t delay );
 
     virtual ~GameOfLifeCmd();
