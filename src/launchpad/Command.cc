@@ -50,12 +50,6 @@ struct lp
     static constexpr bool    DO_COPY  = true;
     static constexpr bool    NO_COPY  = false;
 
-    enum {
-        kANY   = 0,
-        kSET   = 1,
-        kUNSET = 2,
-    };
-
     static uint64_t check_delay(const uint64_t delay, const uint64_t default_delay)
     {
         if(delay == 0UL) {
@@ -63,26 +57,6 @@ struct lp
         }
         return delay;
     }
-
-    static void assert_argument(const std::string& argument, const int expected)
-    {
-        switch(expected) {
-            case kANY:
-                break;
-            case kSET:
-                if(argument.empty() != false) {
-                    throw std::runtime_error(std::string("missing argument"));
-                }
-                break;
-            case kUNSET:
-                if(argument.empty() == false) {
-                    throw std::runtime_error(std::string("unexpected argument") + ' ' + '<' + argument + '>');
-                }
-                break;
-            default:
-                break;
-        }
-    };
 
     static void sleep(Launchpad& launchpad, const uint64_t delay)
     {
@@ -488,6 +462,9 @@ ListCmd::ListCmd ( const ArgList& arglist
                  , const uint64_t delay )
     : Command(arglist, console, launchpad, delay)
 {
+    if(_arglist.count() != 0) {
+        throw std::runtime_error("invalid argument count");
+    }
 }
 
 ListCmd::~ListCmd()
@@ -542,6 +519,9 @@ ResetCmd::ResetCmd ( const ArgList& arglist
                    , const uint64_t delay )
     : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
 {
+    if(_arglist.count() != 0) {
+        throw std::runtime_error("invalid argument count");
+    }
 }
 
 ResetCmd::~ResetCmd()
@@ -567,6 +547,9 @@ CycleCmd::CycleCmd ( const ArgList& arglist
                    , const uint64_t delay )
     : Command(arglist, console, launchpad, lp::check_delay(delay, DEFAULT_DELAY))
 {
+    if(_arglist.count() != 0) {
+        throw std::runtime_error("invalid argument count");
+    }
 }
 
 CycleCmd::~CycleCmd()
