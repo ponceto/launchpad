@@ -1,5 +1,5 @@
 #
-# acinclude.m4 - Copyright (c) 2001-2022 - Olivier Poncet
+# acinclude.m4 - Copyright (c) 2001-2023 - Olivier Poncet
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 # ----------------------------------------------------------------------------
 
 AC_DEFUN([AX_CHECK_C99], [
-AC_PROG_CC_C99
+AC_PROG_CC
 ])dnl AX_CHECK_C99
 
 # ----------------------------------------------------------------------------
@@ -82,7 +82,6 @@ AC_MSG_ERROR([unable to determine byte-order])
 # ----------------------------------------------------------------------------
 
 AC_DEFUN([AX_CHECK_HEADERS], [
-AC_HEADER_STDC
 ])dnl AX_CHECK_HEADERS
 
 # ----------------------------------------------------------------------------
@@ -90,7 +89,7 @@ AC_HEADER_STDC
 # ----------------------------------------------------------------------------
 
 AC_DEFUN([AX_CHECK_PTHREAD], [
-AX_PTHREAD([], [AC_ERROR([pthread was not found])])
+AX_PTHREAD([], [AC_MSG_ERROR([pthread was not found])])
 ])dnl AX_CHECK_PTHREAD
 
 # ----------------------------------------------------------------------------
@@ -98,7 +97,7 @@ AX_PTHREAD([], [AC_ERROR([pthread was not found])])
 # ----------------------------------------------------------------------------
 
 AC_DEFUN([AX_CHECK_RTMIDI], [
-PKG_CHECK_MODULES([rtmidi], [rtmidi >= 3.0.0], [], [AC_ERROR([rtmidi was not found])])
+PKG_CHECK_MODULES([rtmidi], [rtmidi >= 3.0.0], [], [AC_MSG_ERROR([rtmidi was not found])])
 ])dnl AX_CHECK_RTMIDI
 
 # ----------------------------------------------------------------------------
